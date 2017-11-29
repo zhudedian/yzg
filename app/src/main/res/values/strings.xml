@@ -1,0 +1,14 @@
+<resources>
+    <string name="app_name">易掌柜手机助手</string>
+
+
+    <string name="push_button">按键</string>
+    <string name="touch_button">触摸</string>
+
+    <string name="disconnect_notice">您还没有绑定电视，点击去绑定</string>
+
+    <string name="appliction">应用</string>
+    <string name="remote">遥控</string>
+    <string name="transmitter">传输</string>
+    <string name="tool">工具</string>
+</resources>
