@@ -4,6 +4,9 @@
 
     <string name="push_button">按键</string>
     <string name="touch_button">触摸</string>
+    <string name="recommend_button">推荐</string>
+    <string name="local_button">本地</string>
+    <string name="uninstall_button">卸载</string>
 
     <string name="disconnect_notice">您还没有绑定电视，点击去绑定</string>
 

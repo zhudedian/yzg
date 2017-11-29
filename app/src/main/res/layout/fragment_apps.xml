@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="#25252c">
+    <LinearLayout
+        android:orientation="vertical"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+        <RelativeLayout
+            android:id="@+id/top_relative"
+            android:layout_width="match_parent"
+            android:layout_height="48dp">
+
+            <TextView
+                android:id="@+id/recommend_button"
+                android:layout_width="60dp"
+                android:layout_height="30dp"
+                android:layout_centerVertical="true"
+                android:layout_alignParentLeft="true"
+                android:layout_marginLeft="40dp"
+                android:gravity="center"
+                android:textSize="16sp"
+                android:background="@drawable/title_text_back"
+                android:text="@string/recommend_button"/>
+            <TextView
+                android:id="@+id/local_button"
+                android:layout_width="60dp"
+                android:layout_height="30dp"
+                android:layout_centerInParent="true"
+                android:gravity="center"
+                android:textSize="16sp"
+                android:background="@drawable/title_text_back"
+                android:text="@string/local_button"/>
+            <TextView
+                android:id="@+id/uninstall_button"
+                android:layout_width="60dp"
+                android:layout_height="30dp"
+                android:layout_centerVertical="true"
+                android:layout_alignParentRight="true"
+                android:layout_marginRight="40dp"
+                android:gravity="center"
+                android:textSize="16sp"
+                android:background="@drawable/title_text_back"
+                android:text="@string/uninstall_button"/>
+
+        </RelativeLayout>
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="#0e0e0e"></View>
+        <LinearLayout
+            android:id="@+id/notice_linear_layout"
+            android:orientation="horizontal"
+            android:layout_width="match_parent"
+            android:layout_height="40dp"
+            android:gravity="center">
+
+            <ImageView
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:src="@drawable/notice_tag"/>
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="12sp"
+                android:text="@string/disconnect_notice"
+                android:textColor="#757575"/>
+
+        </LinearLayout>
+
+
+
+
+    </LinearLayout>
+
+</RelativeLayout>
