@@ -9,6 +9,7 @@ import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
@@ -22,12 +23,14 @@ import com.ider.yzg.db.MyData;
 
 public class RemoteFragment extends Fragment implements View.OnTouchListener,GestureDetector.OnGestureListener,View.OnClickListener{
 
+    private String TAG = "RemoteFragment";
     private Context context;
 
     private TextView push,touch;
     private LinearLayout touchLinear;
     private RelativeLayout pushRelative;
     private CustomViewPager viewPager;
+    private ImageView center,up,down,left,right,power,setting,volumeUp,volumeDown,volumeMute,back,home,menu;
 
     private int twoTouchTimes;
     private float lastX2,lastY2,lastX1,lastY1;
@@ -39,6 +42,8 @@ public class RemoteFragment extends Fragment implements View.OnTouchListener,Ges
     public static String info,longinfo,lenth;
     private GestureDetector mygesture = new GestureDetector(this);
 
+    public int page = 1;
+
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState){
@@ -49,6 +54,21 @@ public class RemoteFragment extends Fragment implements View.OnTouchListener,Ges
         touchLinear = (LinearLayout)view.findViewById(R.id.touch_linear);
         pushRelative = (RelativeLayout)view.findViewById(R.id.push_relative);
 
+        center = (ImageView)view.findViewById(R.id.center_button);
+        up = (ImageView)view.findViewById(R.id.up_button);
+        down = (ImageView)view.findViewById(R.id.down_button);
+        left = (ImageView)view.findViewById(R.id.left_button);
+        right = (ImageView)view.findViewById(R.id.right_button);
+        volumeUp = (ImageView)view.findViewById(R.id.volume_up_button);
+        volumeDown = (ImageView)view.findViewById(R.id.volume_down_button);
+        volumeMute = (ImageView)view.findViewById(R.id.volume_mute_button);
+        power = (ImageView)view.findViewById(R.id.power_button);
+        setting = (ImageView)view.findViewById(R.id.setting_button);
+        back = (ImageView)view.findViewById(R.id.back_button);
+        home = (ImageView)view.findViewById(R.id.home_button);
+        menu = (ImageView)view.findViewById(R.id.menu_button);
+
+
         return view;
     }
     @Override
@@ -58,11 +78,32 @@ public class RemoteFragment extends Fragment implements View.OnTouchListener,Ges
         setListener();
         push.performClick();
     }
+    @Override
+    public void onResume(){
+        super.onResume();
+        if (page == 2){
+            viewPager.setScanScroll(false);
+        }
+    }
     private void setListener(){
         push.setOnClickListener(this);
         touch.setOnClickListener(this);
-        touch.setOnTouchListener(this);
-        touch.setLongClickable(true);
+        touchLinear.setOnTouchListener(this);
+        touchLinear.setLongClickable(true);
+
+        center.setOnClickListener(this);
+        up.setOnClickListener(this);
+        down.setOnClickListener(this);
+        left.setOnClickListener(this);
+        right.setOnClickListener(this);
+        volumeMute.setOnClickListener(this);
+        volumeDown.setOnClickListener(this);
+        volumeUp.setOnClickListener(this);
+        power.setOnClickListener(this);
+        setting.setOnClickListener(this);
+        home.setOnClickListener(this);
+        back.setOnClickListener(this);
+        menu.setOnClickListener(this);
     }
 
     @Override
@@ -74,6 +115,48 @@ public class RemoteFragment extends Fragment implements View.OnTouchListener,Ges
             case R.id.touch_button:
                 clickTouch();
                 break;
+            case R.id.center_button:
+                sendMsg("cocenter ,,,,,,");
+                break;
+            case R.id.left_button:
+                sendMsg("coleft ,,,,,,,,");
+                break;
+            case R.id.right_button:
+                sendMsg("coright ,,,,,,,");
+                break;
+            case R.id.up_button:
+                sendMsg("coup ,,,,,,,,,,");
+                break;
+            case R.id.down_button:
+                sendMsg("codown ,,,,,,,,");
+                break;
+            case R.id.volume_down_button:
+                sendMsg("covoldown ,,,,,");
+                break;
+            case R.id.volume_up_button:
+                sendMsg("covolup ,,,,,,,");
+                break;
+            case R.id.volume_mute_button:
+                sendMsg("covolmute ,,,,,");
+                break;
+            case R.id.power_button:
+                sendMsg("copower ,,,,,,,");
+                break;
+            case R.id.setting_button:
+                sendMsg("cosetting ,,,,,");
+                break;
+            case R.id.back_button:
+                sendMsg("cb ,,,,,,,,,,,,");
+                break;
+            case R.id.menu_button:
+                sendMsg("comenubt ,,,,,,");
+                break;
+        }
+    }
+
+    private void sendMsg(String msg){
+        if (MyData.client!=null){
+            MyData.client.sendMsg(msg);
         }
     }
 
@@ -84,6 +167,8 @@ public class RemoteFragment extends Fragment implements View.OnTouchListener,Ges
         touch.setTextColor(getResources().getColor(R.color.white));
         touchLinear.setVisibility(View.GONE);
         pushRelative.setVisibility(View.VISIBLE);
+        viewPager.setScanScroll(true);
+        page = 1;
     }
     private void clickTouch(){
         touch.setSelected(true);
@@ -93,17 +178,19 @@ public class RemoteFragment extends Fragment implements View.OnTouchListener,Ges
         touchLinear.setVisibility(View.VISIBLE);
         pushRelative.setVisibility(View.GONE);
         viewPager.setScanScroll(false);
+        page = 2;
     }
 
     public void setViewPager(CustomViewPager viewPager){
         this.viewPager = viewPager;
     }
+
     @Override
     public boolean onTouch(View v, MotionEvent event) {
-        Log.i("MainActivity", "onTouch"+"event.getAction()"+event.getAction());
+        Log.i(TAG, "onTouch"+"event.getAction()"+event.getAction());
         if (event.getPointerCount() == 2) {
             if (twoTouchTimes == 0){
-                //MyData.client.sendMsg("cd ,,,,,,,,,,,,");
+                sendMsg("cd ,,,,,,,,,,,,");
                 lastTwoX=event.getX(1);
                 lastTwoY = event.getY(1);
                 lastXa = lastTwoX;
@@ -137,10 +224,9 @@ public class RemoteFragment extends Fragment implements View.OnTouchListener,Ges
                                 msg = msg + ",";
                             }
                         }
-                        //MyData.client.sendMsg(msg);
+                        sendMsg(msg);
                     }
                 }
-//                lastTwoY = event.getY(0);
             }
         }else {
             twoTouchTimes = 0;
@@ -150,26 +236,26 @@ public class RemoteFragment extends Fragment implements View.OnTouchListener,Ges
 
     @Override
     public boolean onDown(MotionEvent e) {
-        Log.i("MainActivity", "onDown"+e.getPointerCount());
+        Log.i(TAG, "onDown"+e.getPointerCount());
         twoTouch = false;
         twoTouchTimes =0 ;
         lastTwoY = -1;
-        //MyData.client.sendMsg("cn ,,,,,,,,,,,,");
+        sendMsg("cn ,,,,,,,,,,,,");
         return false;
     }
 
 
     @Override
     public void onShowPress(MotionEvent e) {
-        Log.i("MainActivity", "onShowPress");
+        Log.i(TAG, "onShowPress");
 
     }
 
     @Override
     public boolean onSingleTapUp(MotionEvent e) {
-        Log.i("MainActivity", "onSingleTapUp");
+        Log.i(TAG, "onSingleTapUp");
         if (!twoTouch) {
-            //MyData.client.sendMsg("cc ,,,,,,,,,,,,");
+            MyData.client.sendMsg("cc ,,,,,,,,,,,,");
         }
         return false;
     }
@@ -198,9 +284,9 @@ public class RemoteFragment extends Fragment implements View.OnTouchListener,Ges
                 msg= msg+",";
             }
         }
-        Log.i("mejklj",msg);
+        Log.i(TAG,"msg="+msg);
         if (!twoTouch){
-            //MyData.client.sendMsg(msg);
+            sendMsg(msg);
         }
         return false;
     }
@@ -223,9 +309,9 @@ public class RemoteFragment extends Fragment implements View.OnTouchListener,Ges
                     msg = msg + ",";
                 }
             }
-            //MyData.client.sendMsg(msg);
+            sendMsg(msg);
         }
-        Log.i("MainActivity", "e2.getX()="+e2.getX()+"e1.getX()="+e1.getX()+"e2.getY()="+e2.getY()+"e1.getY()="+e1.getY()+"velocityX="+velocityX+"velocityY="+velocityY);
+        Log.i(TAG, "e2.getX()="+e2.getX()+"e1.getX()="+e1.getX()+"e2.getY()="+e2.getY()+"e1.getY()="+e1.getY()+"velocityX="+velocityX+"velocityY="+velocityY);
 
         twoTouch = false;
         return false;

@@ -13,36 +13,27 @@
             android:layout_height="48dp">
 
             <TextView
-                android:id="@+id/recommend_button"
+                android:id="@+id/tvbox_button"
                 android:layout_width="60dp"
                 android:layout_height="30dp"
                 android:layout_centerVertical="true"
                 android:layout_alignParentLeft="true"
-                android:layout_marginLeft="40dp"
+                android:layout_marginLeft="100dp"
                 android:gravity="center"
                 android:textSize="16sp"
                 android:background="@drawable/title_text_back"
-                android:text="@string/recommend_button"/>
+                android:text="@string/tvbox_button"/>
             <TextView
-                android:id="@+id/local_button"
-                android:layout_width="60dp"
-                android:layout_height="30dp"
-                android:layout_centerInParent="true"
-                android:gravity="center"
-                android:textSize="16sp"
-                android:background="@drawable/title_text_back"
-                android:text="@string/local_button"/>
-            <TextView
-                android:id="@+id/uninstall_button"
+                android:id="@+id/mobile_button"
                 android:layout_width="60dp"
                 android:layout_height="30dp"
                 android:layout_centerVertical="true"
                 android:layout_alignParentRight="true"
-                android:layout_marginRight="40dp"
+                android:layout_marginRight="100dp"
                 android:gravity="center"
                 android:textSize="16sp"
                 android:background="@drawable/title_text_back"
-                android:text="@string/uninstall_button"/>
+                android:text="@string/mobile_button"/>
 
         </RelativeLayout>
         <View
@@ -78,5 +69,10 @@
 
 
     </LinearLayout>
-
+    <ProgressBar
+        android:id="@+id/progress_bar"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerInParent="true"
+        android:visibility="gone"/>
 </RelativeLayout>

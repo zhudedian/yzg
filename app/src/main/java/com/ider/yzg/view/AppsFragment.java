@@ -6,8 +6,7 @@ import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.LinearLayout;
-import android.widget.RelativeLayout;
+import android.widget.ListView;
 import android.widget.TextView;
 
 import com.ider.yzg.R;
@@ -21,8 +20,7 @@ public class AppsFragment extends Fragment implements View.OnClickListener{
     private Context context;
 
     private TextView recommend,local,uninstall;
-    private LinearLayout touchLinear;
-    private RelativeLayout pushRelative;
+    private ListView listView;
 
 
     @Override
@@ -32,8 +30,7 @@ public class AppsFragment extends Fragment implements View.OnClickListener{
         local = (TextView) view.findViewById(R.id.local_button);
         uninstall = (TextView)view.findViewById(R.id.uninstall_button);
 
-        touchLinear = (LinearLayout)view.findViewById(R.id.touch_linear);
-        pushRelative = (RelativeLayout)view.findViewById(R.id.push_relative);
+        listView = (ListView)view.findViewById(R.id.list_view);
 
         return view;
     }

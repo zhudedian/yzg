@@ -1,22 +1,33 @@
 package com.ider.yzg;
 
+import android.content.Intent;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
 import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentManager;
-import android.support.v4.app.FragmentTransaction;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.View;
 
+import com.ider.yzg.db.MyData;
+import com.ider.yzg.net.Connect;
+import com.ider.yzg.util.FragmentInter;
+import com.ider.yzg.util.FragmentOpen;
+import com.ider.yzg.util.MyApplication;
+import com.ider.yzg.util.SocketClient;
 import com.ider.yzg.view.AppsFragment;
 import com.ider.yzg.view.BottomMenu;
 import com.ider.yzg.view.CustomViewPager;
 import com.ider.yzg.view.MyFragmentPagerAdapter;
 import com.ider.yzg.view.RemoteFragment;
+import com.ider.yzg.view.TransportFragment;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import static android.R.attr.fragment;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener{
 
@@ -25,7 +36,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     private RemoteFragment remoteFragment;
     private AppsFragment appsFragment;
+    private TransportFragment transportFragment;
+    private FragmentInter fragmentInter;
     private BottomMenu apps,remote,transmitter,tool;
+
+    private int endCount;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -42,11 +57,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         appsFragment = new AppsFragment();
         remoteFragment = new RemoteFragment();
+        transportFragment = new TransportFragment();
+        fragmentInter = transportFragment;
         //replaceFragment(remoteFragment);
         setListener();
-        //remote.performClick();
+
         fragmentList.add(appsFragment);
         fragmentList.add(remoteFragment);
+        fragmentList.add(transportFragment);
         viewpager = (CustomViewPager)findViewById(R.id.view_pager);
         remoteFragment.setViewPager(viewpager);
         viewpager.setAdapter(new MyFragmentPagerAdapter(getSupportFragmentManager(),fragmentList));
@@ -54,6 +72,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             @Override
             public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
                 setDate(position);
+                if (position == 1&&remoteFragment.page == 2){
+                    viewpager.setScanScroll(false);
+                }
+                if (position == 2){
+                    fragmentInter.fragmentInit();
+                }
             }
 
             @Override
@@ -66,6 +90,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
             }
         });
+        //remote.performClick();
     }
 
     private void setListener(){
@@ -80,14 +105,21 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         switch (view.getId()){
             case R.id.apps:
                 setDate(0);
+                viewpager.setScanScroll(true);
                 viewpager.setCurrentItem(0);
                 break;
             case R.id.remote:
                 setDate(1);
                 viewpager.setCurrentItem(1);
+                if (remoteFragment.page == 2){
+                    viewpager.setScanScroll(false);
+                }
                 break;
             case R.id.transmitter:
                 setDate(2);
+                viewpager.setScanScroll(true);
+                viewpager.setCurrentItem(2);
+                fragmentInter.fragmentInit();
                 break;
             case R.id.tool:
                 setDate(3);
@@ -122,7 +154,67 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 break;
         }
     }
+    @Override
+    protected void onResume(){
+        super.onResume();
+        Connect.onBrodacastSend(mHandler);
+        init();
+    }
+    private void init(){
 
+        if (MyData.isConnect){
+            if (MyData.client==null){
+                MyData.client = new SocketClient();
+                MyData.client.clintValue(MyData.boxIP, 7777);
+                MyData.client.openClientThread();
+                SocketClient.mHandler = new Handler() {
+                    @Override
+                    public void handleMessage(Message msg) {
+                        String pos = msg.obj.toString();
+                        Log.i("msg",pos);
+                        if (pos.contains("In")) {
+                            Intent intent = new Intent("Box_Message");
+                            intent.putExtra("info", pos);
+                            MyApplication.getContext().sendBroadcast(intent);
+                            endCount = 0;
+                        }else {
+                            if (endCount >= 4){
+                                if (MyData.client!=null) {
+                                    MyData.client.close();
+                                    MyData.client = null;
+                                    Connect.onBrodacastSend(mHandler);
+                                    init();
+                                    Intent intent = new Intent("connect_failed");
+                                    MyApplication.getContext().sendBroadcast(intent);
+                                    endCount = 0;
+                                }
+                            }else {
+                                endCount++;
+                                Log.i("count",endCount+"");
+                            }
+                        }
+
+                    }
+                };
+            }
+
+        }else {
+
+        }
+    }
+    Handler mHandler = new Handler(){
+        @Override
+        public void handleMessage(Message msg){
+            switch (msg.what){
+                case 0:
+                    init();
+                    break;
+                default:
+                    break;
+            }
+
+        }
+    };
 //    private void replaceFragment(Fragment fragment){
 //        FragmentManager fragmentManager = getSupportFragmentManager();
 //        FragmentTransaction transaction = fragmentManager.beginTransaction();

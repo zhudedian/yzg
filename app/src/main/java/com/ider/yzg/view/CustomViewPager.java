@@ -3,7 +3,6 @@ package com.ider.yzg.view;
 import android.content.Context;
 import android.support.v4.view.ViewPager;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.view.MotionEvent;
 
 /**
@@ -33,13 +32,13 @@ public class CustomViewPager extends ViewPager {
 
     @Override
     public boolean onInterceptTouchEvent(MotionEvent ev) {
-        Log.i(TAG, "onInterceptTouchEvent(MotionEvent ev)");
+        //Log.i(TAG, "onInterceptTouchEvent(MotionEvent ev)");
         return isCanScroll && super.onInterceptTouchEvent(ev);
     }
 
     @Override
     public boolean onTouchEvent(MotionEvent ev) {
-        Log.i(TAG, "onTouchEvent(MotionEvent ev)");
+        //Log.i(TAG, "onTouchEvent(MotionEvent ev)");
         return isCanScroll && super.onTouchEvent(ev);
 
     }
