@@ -14,7 +14,6 @@ import android.view.View;
 import com.ider.yzg.db.MyData;
 import com.ider.yzg.net.Connect;
 import com.ider.yzg.util.FragmentInter;
-import com.ider.yzg.util.FragmentOpen;
 import com.ider.yzg.util.MyApplication;
 import com.ider.yzg.util.SocketClient;
 import com.ider.yzg.view.AppsFragment;
@@ -31,6 +30,7 @@ import static android.R.attr.fragment;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener{
 
+    private String TAG = "MainActivity";
     private CustomViewPager viewpager;
     private List<Fragment> fragmentList = new ArrayList<>();
 
@@ -41,6 +41,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private BottomMenu apps,remote,transmitter,tool;
 
     private int endCount;
+    private int currentItem;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -71,12 +72,17 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         viewpager.setOnPageChangeListener(new ViewPager.OnPageChangeListener() {
             @Override
             public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
-                setDate(position);
-                if (position == 1&&remoteFragment.page == 2){
-                    viewpager.setScanScroll(false);
-                }
-                if (position == 2){
-                    fragmentInter.fragmentInit();
+                //Log.i(TAG,"positionOffset="+positionOffset+"positionOffsetPixels="+positionOffsetPixels);
+                if (positionOffsetPixels == 0) {
+                    setDate(position);
+                    if (position == 1 && remoteFragment.page == 2) {
+                        viewpager.setScanScroll(false);
+                    } else {
+                        viewpager.setScanScroll(true);
+                    }
+                    if (position == 2) {
+                        fragmentInter.fragmentInit();
+                    }
                 }
             }
 
@@ -90,7 +96,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
             }
         });
-        //remote.performClick();
+        remote.performClick();
     }
 
     private void setListener(){
@@ -105,21 +111,15 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         switch (view.getId()){
             case R.id.apps:
                 setDate(0);
-                viewpager.setScanScroll(true);
                 viewpager.setCurrentItem(0);
                 break;
             case R.id.remote:
                 setDate(1);
                 viewpager.setCurrentItem(1);
-                if (remoteFragment.page == 2){
-                    viewpager.setScanScroll(false);
-                }
                 break;
             case R.id.transmitter:
                 setDate(2);
-                viewpager.setScanScroll(true);
                 viewpager.setCurrentItem(2);
-                fragmentInter.fragmentInit();
                 break;
             case R.id.tool:
                 setDate(3);
@@ -133,24 +133,28 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 remote.setSelect(false);
                 transmitter.setSelect(false);
                 tool.setSelect(false);
+                currentItem = 0;
                 break;
             case 1:
                 apps.setSelect(false);
                 remote.setSelect(true);
                 transmitter.setSelect(false);
                 tool.setSelect(false);
+                currentItem = 1;
                 break;
             case 2:
                 apps.setSelect(false);
                 remote.setSelect(false);
                 transmitter.setSelect(true);
                 tool.setSelect(false);
+                currentItem = 2;
                 break;
             case 3:
                 apps.setSelect(false);
                 remote.setSelect(false);
                 transmitter.setSelect(false);
                 tool.setSelect(true);
+                currentItem = 3;
                 break;
         }
     }
@@ -221,4 +225,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 //        transaction.replace(R.id.frame_layout,fragment);
 //        transaction.commit();
 //    }
+    @Override
+   public void onBackPressed(){
+        if (currentItem!=2||!fragmentInter.fragmentBack()){
+            finish();
+        }
+    }
 }

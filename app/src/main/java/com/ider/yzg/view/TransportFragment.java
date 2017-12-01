@@ -5,6 +5,7 @@ import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.os.Handler;
@@ -33,7 +34,7 @@ import com.ider.yzg.popu.PopuUtils;
 import com.ider.yzg.popu.PopupDialog;
 import com.ider.yzg.popu.Popus;
 import com.ider.yzg.util.FragmentInter;
-import com.ider.yzg.util.FragmentOpen;
+
 import com.ider.yzg.util.ListSort;
 
 import java.io.File;
@@ -55,6 +56,8 @@ import static com.ider.yzg.util.SocketClient.mHandler;
 public class TransportFragment extends Fragment implements View.OnClickListener,FragmentInter {
     private String TAG = "RemoteFragment";
     private Context context;
+    private SharedPreferences preferences;
+    private SharedPreferences.Editor editor;
 
     private TextView tvbox, mobile;
     private ProgressDialog progressDialog;
@@ -82,6 +85,8 @@ public class TransportFragment extends Fragment implements View.OnClickListener,
     public void onActivityCreated(final Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
         context = getContext();
+        preferences = context.getSharedPreferences("yzg_prefers", Context.MODE_PRIVATE);
+        editor = preferences.edit();
         okHttpClient = new OkHttpClient.Builder().connectTimeout(20, TimeUnit.SECONDS).readTimeout(60, TimeUnit.SECONDS).build();
         adapter = new FileAdapter(getContext(), R.layout.file_list_item, MyData.boxFiles, MyData.selectBoxFiles);
         listView.setAdapter(adapter);
@@ -102,29 +107,33 @@ public class TransportFragment extends Fragment implements View.OnClickListener,
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                if (!MyData.isShowCheck) {
-                    BoxFile boxFile = MyData.boxFiles.get(position);
-                    if (boxFile.getFileType() == 1) {
-                        fileName = boxFile.getFileName();
-                        if (MyData.boxFilePath.equals("/")) {
-                            MyData.boxFilePath = MyData.boxFilePath + fileName;
+                if (MyData.isConnect) {
+                    if (!MyData.isShowCheck) {
+                        BoxFile boxFile = MyData.boxFiles.get(position);
+                        if (boxFile.getFileType() == 1) {
+                            fileName = boxFile.getFileName();
+                            if (MyData.boxFilePath.equals("/")) {
+                                MyData.boxFilePath = MyData.boxFilePath + fileName;
+                            } else {
+                                MyData.boxFilePath = MyData.boxFilePath + "/" + fileName;
+                            }
+                            init();
                         } else {
-                            MyData.boxFilePath = MyData.boxFilePath + "/" + fileName;
+                            MyData.selectBoxFiles.clear();
+                            MyData.selectBoxFiles.add(boxFile);
+                            //showMenuDialog();
                         }
-                        init();
                     } else {
-                        MyData.selectBoxFiles.clear();
-                        MyData.selectBoxFiles.add(boxFile);
-                        //showMenuDialog();
+                        BoxFile boxFile = MyData.boxFiles.get(position);
+                        if (MyData.selectBoxFiles.contains(boxFile)) {
+                            MyData.selectBoxFiles.remove(boxFile);
+                        } else {
+                            MyData.selectBoxFiles.add(boxFile);
+                        }
+                        adapter.notifyDataSetChanged();
                     }
-                } else {
-                    BoxFile boxFile = MyData.boxFiles.get(position);
-                    if (MyData.selectBoxFiles.contains(boxFile)) {
-                        MyData.selectBoxFiles.remove(boxFile);
-                    } else {
-                        MyData.selectBoxFiles.add(boxFile);
-                    }
-                    adapter.notifyDataSetChanged();
+                }else {
+                    Toast.makeText(context,context.getString(R.string.disconnect_notice),Toast.LENGTH_SHORT).show();
                 }
             }
         });
@@ -178,24 +187,33 @@ public class TransportFragment extends Fragment implements View.OnClickListener,
     private void init() {
         final String comment = changeToUnicode(MyData.boxFilePath);
         //progressBar.setVisibility(View.VISIBLE);
-        MyData.boxFiles.clear();
-        adapter.notifyDataSetChanged();
-        new Thread() {
-            @Override
-            public void run() {
-                try {
-                    Request request = new Request.Builder().header("comment", comment)
-                            .url(MyData.downUrl).build();
-                    Call call = okHttpClient.newCall(request);
-                    Response response = call.execute();
-                    String result = response.body().string();
-                    Log.i("result", result);
-                    handResult(result);
-                } catch (Exception e) {
-                    e.printStackTrace();
+        if (MyData.isConnect) {
+            MyData.boxFiles.clear();
+            adapter.notifyDataSetChanged();
+            new Thread() {
+                @Override
+                public void run() {
+                    try {
+                        Request request = new Request.Builder().header("comment", comment)
+                                .url(MyData.downUrl).build();
+                        Call call = okHttpClient.newCall(request);
+                        Response response = call.execute();
+                        String result = response.body().string();
+                        Log.i("result", result);
+                        editor.putString("last_path_info",result);
+                        handResult(result);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
                 }
-            }
-        }.start();
+            }.start();
+        }else {
+            String result = preferences.getString("last_path_info",context.getResources().getString(R.string.def_path_info));
+            MyData.boxFiles.clear();
+            adapter.notifyDataSetChanged();
+            Log.i("result", result);
+            handResult(result);
+        }
     }
 
     private void delete() {
@@ -718,4 +736,28 @@ public class TransportFragment extends Fragment implements View.OnClickListener,
 //            adapter.notifyDataSetChanged();
 //        }
 //    }
+    public boolean fragmentBack(){
+        if (MyData.isConnect) {
+            if (!MyData.isShowCheck) {
+                if (MyData.boxFilePath.equals(File.separator) || MyData.boxFilePath.equals("")) {
+                    return false;
+                }
+                Log.i("MyData.boxFilePath", MyData.boxFilePath);
+                if (MyData.boxFilePath.lastIndexOf(File.separator) == 0) {
+                    MyData.boxFilePath = File.separator;
+                } else {
+                    MyData.boxFilePath = MyData.boxFilePath.substring(0, MyData.boxFilePath.lastIndexOf(File.separator));
+                }
+                init();
+                return true;
+            } else {
+                MyData.isShowCheck = false;
+                MyData.selectBoxFiles.clear();
+                adapter.notifyDataSetChanged();
+                return true;
+            }
+        }else {
+            return false;
+        }
+    }
 }

@@ -6,4 +6,5 @@ package com.ider.yzg.util;
 
 public interface FragmentInter {
     public void fragmentInit();
+    boolean fragmentBack();
 }
