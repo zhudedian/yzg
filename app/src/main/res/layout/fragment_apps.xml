@@ -51,11 +51,14 @@
             android:background="#0e0e0e"></View>
         <LinearLayout
             android:id="@+id/notice_linear_layout"
+            android:orientation="vertical"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+        <LinearLayout
             android:orientation="horizontal"
             android:layout_width="match_parent"
             android:layout_height="40dp"
             android:gravity="center">
-
             <ImageView
                 android:layout_width="20dp"
                 android:layout_height="20dp"
@@ -68,15 +71,28 @@
                 android:textColor="#757575"/>
 
         </LinearLayout>
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="#0e0e0e"></View>
+        </LinearLayout>
         <ListView
             android:id="@+id/list_view"
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:layout_weight="1"
+            android:divider="#0e0e0e"
+            android:dividerHeight="1dp"
             />
 
 
 
     </LinearLayout>
+    <ProgressBar
+        android:id="@+id/progress_bar"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerInParent="true"
+        android:visibility="gone"/>
 
 </RelativeLayout>

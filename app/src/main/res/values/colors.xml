@@ -6,4 +6,6 @@
     <color name="white">#ffffff</color>
     <color name="black">#25252c</color>
     <color name="grey_text_bottom">#7d7c81</color>
+    <color name="apk_state_yellow">#d7b659</color>
+    <color name="apk_state_grey">#5e5e5e</color>
 </resources>

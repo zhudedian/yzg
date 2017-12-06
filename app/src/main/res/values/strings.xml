@@ -17,6 +17,13 @@
     <string name="transmitter">传输</string>
     <string name="tool">工具</string>
 
+    <string name="installed">已安装</string>
+    <string name="update">升级</string>
+    <string name="installing">安装</string>
+    <string name="uninstalled">已卸载</string>
+    <string name="uninstall">卸载</string>
+    <string name="version">版本：</string>
+
     <string name="def_path_info">/storage/emulated/0\"type=\"1\"name=\"Music\"size=\"4.12G\"type=\"1\"name=\"Ringtones\"size=\"4.12G
         \"type=\"1\"name=\"Alarms\"size=\"4.12G\"type=\"1\"name=\"Movies\"size=\"4.12G\"type=\"1\"name=\"Download\"size=\"4.12G
         \"type=\"1\"name=\"DCIM\"size=\"4.12G\"type=\"1\"name=\"Android\"size=\"4.12G\"type=\"1\"name=\"tencent\"size=\"4.12G

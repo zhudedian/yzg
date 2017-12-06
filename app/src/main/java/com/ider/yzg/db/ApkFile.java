@@ -4,6 +4,8 @@ import android.graphics.drawable.Drawable;
 
 import org.litepal.crud.DataSupport;
 
+import static com.ider.yzg.R.string.installed;
+
 /**
  * Created by Eric on 2017/8/26.
  */
@@ -15,11 +17,28 @@ public class ApkFile extends DataSupport {
 
     private Drawable apkDraw;
 
-    private int fileSize;
+    private String fileSize;
+
+    private int installLevel = 1;
+    private String packageName;
+
+    private String label;
+
+    private String type;
+
+    private String versionName;
+
+    private int versionCode;
+
 
     public ApkFile(String fileName,String filePath){
         this.fileName = fileName;
         this.filePath = filePath;
+    }
+    public ApkFile(String fileName,String filePath,String fileSize){
+        this.fileName = fileName;
+        this.filePath = filePath;
+        this.fileSize = fileSize;
     }
     public ApkFile(String fileName,String filePath,Drawable drawable){
         this.fileName = fileName;
@@ -42,11 +61,11 @@ public class ApkFile extends DataSupport {
         return filePath;
     }
 
-    public void setFileSize(int size){
+    public void setFileSize(String size){
         this.fileSize = size;
     }
 
-    public int getFileSize(){
+    public String getFileSize(){
         return fileSize;
     }
 
@@ -55,6 +74,48 @@ public class ApkFile extends DataSupport {
     }
     public Drawable getApkDraw(){
         return apkDraw;
+    }
+
+    public void setInstallLevel(int installLevel){
+        this.installLevel = installLevel;
+    }
+    public int getInstallLevel(){
+        return installLevel;
+    }
+    public void setPackageName(String name){
+        this.packageName = name;
+    }
+
+    public String getPackageName(){
+        return packageName;
+    }
+
+    public void setLabel(String label){
+        this.label = label;
+    }
+    public String getLabel(){
+        return label;
+    }
+
+    public void setType(String type){
+        this.type = type;
+    }
+    public String getType(){
+        return type;
+    }
+
+
+    public void setVersionCode(int versionCode){
+        this.versionCode = versionCode;
+    }
+    public int getVersionCode(){
+        return versionCode;
+    }
+    public void setVersionName(String versionName){
+        this.versionName = versionName;
+    }
+    public String getVersionName(){
+        return versionName;
     }
     @Override
     public boolean equals(Object object){

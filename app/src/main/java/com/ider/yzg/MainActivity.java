@@ -1,15 +1,20 @@
 package com.ider.yzg;
 
+import android.Manifest;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
+import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
+import android.support.v4.content.ContextCompat;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
+import android.widget.Toast;
 
 import com.ider.yzg.db.MyData;
 import com.ider.yzg.net.Connect;
@@ -25,8 +30,6 @@ import com.ider.yzg.view.TransportFragment;
 
 import java.util.ArrayList;
 import java.util.List;
-
-import static android.R.attr.fragment;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener{
 
@@ -59,7 +62,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         appsFragment = new AppsFragment();
         remoteFragment = new RemoteFragment();
         transportFragment = new TransportFragment();
-        fragmentInter = transportFragment;
         //replaceFragment(remoteFragment);
         setListener();
 
@@ -79,9 +81,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                         viewpager.setScanScroll(false);
                     } else {
                         viewpager.setScanScroll(true);
-                    }
-                    if (position == 2) {
-                        fragmentInter.fragmentInit();
                     }
                 }
             }
@@ -129,13 +128,21 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private void setDate(int position){
         switch (position){
             case 0:
-                apps.setSelect(true);
-                remote.setSelect(false);
-                transmitter.setSelect(false);
-                tool.setSelect(false);
-                currentItem = 0;
+                if (ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.READ_EXTERNAL_STORAGE)!= PackageManager.PERMISSION_GRANTED){
+                    ActivityCompat.requestPermissions(MainActivity.this,new String[]{Manifest.permission.READ_EXTERNAL_STORAGE},1);
+                }else {
+                    fragmentInter = appsFragment;
+                    fragmentInter.fragmentInit();
+                    apps.setSelect(true);
+                    remote.setSelect(false);
+                    transmitter.setSelect(false);
+                    tool.setSelect(false);
+                    currentItem = 0;
+                }
+
                 break;
             case 1:
+//                fragmentInter = remoteFragment;
                 apps.setSelect(false);
                 remote.setSelect(true);
                 transmitter.setSelect(false);
@@ -143,6 +150,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 currentItem = 1;
                 break;
             case 2:
+                fragmentInter = transportFragment;
+                fragmentInter.fragmentInit();
                 apps.setSelect(false);
                 remote.setSelect(false);
                 transmitter.setSelect(true);
@@ -204,6 +213,32 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         }else {
 
+        }
+    }
+    @Override
+    public void onRequestPermissionsResult(int requestCode,String[] permissions,int[] grantResults){
+        switch (requestCode){
+            case 1:
+                if (grantResults.length>0&& grantResults[0] ==PackageManager.PERMISSION_GRANTED){
+                    fragmentInter = appsFragment;
+                    fragmentInter.fragmentInit();
+                    apps.setSelect(true);
+                    remote.setSelect(false);
+                    transmitter.setSelect(false);
+                    tool.setSelect(false);
+                    currentItem = 0;
+                }else {
+                    Toast.makeText(this,"You denied the permission",Toast.LENGTH_SHORT).show();
+                }
+                break;
+            case 2:
+
+                break;
+            case 3:
+
+                break;
+
+            default:
         }
     }
     Handler mHandler = new Handler(){

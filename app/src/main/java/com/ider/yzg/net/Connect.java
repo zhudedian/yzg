@@ -4,7 +4,6 @@ import android.os.Handler;
 
 import com.ider.yzg.db.MyData;
 
-import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.InetAddress;
 import java.net.MulticastSocket;
@@ -19,6 +18,7 @@ public class Connect {
     private static InetAddress address;
     private static MulticastSocket multicastSocket;
     private static Handler mHandler;
+    private static boolean isOnBrodacastReceiver = false;
     public static void onBrodacastSend(Handler handler) {
         mHandler = handler;
         MyData.isConnect = false;
@@ -52,7 +52,7 @@ public class Connect {
                             Thread.sleep(2000);
                         } catch (InterruptedException e) {
                             e.printStackTrace();
-                        } catch (IOException e) {
+                        } catch (Exception e) {
                             e.printStackTrace();
                         }
                     }

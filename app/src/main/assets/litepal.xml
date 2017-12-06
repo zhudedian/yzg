@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<litepal>
+    <dbname value="ApkFile" />
+    <version value="2" />
+
+    <list>
+        <mapping class="com.ider.yzg.db.ApkFile"/>
+        <mapping class="com.ider.yzg.db.TvApp"/>
+    </list>
+</litepal>
