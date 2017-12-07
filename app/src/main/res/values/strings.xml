@@ -11,6 +11,9 @@
     <string name="mobile_button">手机</string>
 
     <string name="disconnect_notice">您还没有绑定电视，点击去绑定</string>
+    <string name="disconnect_notice2">未连接电视！</string>
+    <string name="system_app_uninstall_notice">系统应该无法卸载！</string>
+    <string name="file_count_end">个文件和文件夹</string>
 
     <string name="appliction">应用</string>
     <string name="remote">遥控</string>
@@ -18,9 +21,11 @@
     <string name="tool">工具</string>
 
     <string name="installed">已安装</string>
+    <string name="old_version">旧版</string>
     <string name="update">升级</string>
     <string name="installing">安装</string>
     <string name="uninstalled">已卸载</string>
+    <string name="system_app">系统应用</string>
     <string name="uninstall">卸载</string>
     <string name="version">版本：</string>
 

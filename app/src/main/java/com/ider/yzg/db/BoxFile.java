@@ -1,25 +1,22 @@
 package com.ider.yzg.db;
 
-import android.graphics.drawable.Drawable;
-
-import static android.R.attr.type;
+import org.litepal.crud.DataSupport;
 
 /**
  * Created by Eric on 2017/8/29.
  */
 
-public class BoxFile {
+public class BoxFile extends DataSupport {
 
-    private int fileType;
+    private int fileTypes;
 
-    private boolean select;
+    private boolean selected;
 
     private String fileName;
 
     private String filePath;
 
-    private Drawable apkDraw;
-
+    private String createTime;
     private String savePath;
 
     private String fileSize;
@@ -27,20 +24,20 @@ public class BoxFile {
     public BoxFile(){
 
     }
-    public BoxFile(int type,String fileName,String size){
-        this.fileType = type;
+    public BoxFile(int types,String fileName,String size){
+        this.fileTypes = types;
         this.fileName = fileName;
         this.fileSize = size;
     }
     public BoxFile(String fileName,String filePath){
-        this.fileType = type;
         this.fileName = fileName;
         this.filePath = filePath;
     }
 
-    public BoxFile(int type,String fileName,String size,String filePath){
-        this.fileType = type;
+    public BoxFile(int types,String fileName,String createTime,String size,String filePath){
+        this.fileTypes = types;
         this.fileName = fileName;
+        this.createTime = createTime;
         this.fileSize = size;
         this.filePath = filePath;
     }
@@ -76,20 +73,26 @@ public class BoxFile {
         return savePath;
     }
 
-    public void setFileType(int type){
-        this.fileType = type;
+    public void setFileType(int types){
+        this.fileTypes = types;
     }
 
     public int getFileType(){
-        return fileType;
+        return fileTypes;
     }
 
-    public void setSelect(boolean select){
-        this.select = select;
+    public void setSelect(boolean selected){
+        this.selected = selected;
     }
 
     public boolean isSelect(){
-        return select;
+        return selected;
+    }
+    public void setCreateTime(String createTime){
+        this.createTime = createTime;
+    }
+    public String getCreateTime(){
+        return createTime;
     }
 
     @Override

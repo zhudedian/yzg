@@ -21,6 +21,7 @@ import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
@@ -30,12 +31,16 @@ import com.ider.yzg.R;
 import com.ider.yzg.adapter.FileAdapter;
 import com.ider.yzg.db.BoxFile;
 import com.ider.yzg.db.MyData;
+import com.ider.yzg.db.TvApp;
 import com.ider.yzg.popu.PopuUtils;
 import com.ider.yzg.popu.PopupDialog;
 import com.ider.yzg.popu.Popus;
 import com.ider.yzg.util.FragmentInter;
 
 import com.ider.yzg.util.ListSort;
+import com.ider.yzg.util.TvAppSort;
+
+import org.litepal.crud.DataSupport;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -47,6 +52,7 @@ import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
 
+import static com.ider.yzg.R.id.apps;
 import static com.ider.yzg.util.SocketClient.mHandler;
 
 /**
@@ -60,6 +66,7 @@ public class TransportFragment extends Fragment implements View.OnClickListener,
     private SharedPreferences.Editor editor;
 
     private TextView tvbox, mobile;
+    private LinearLayout disConnectLinear;
     private ProgressDialog progressDialog;
     private OkHttpClient okHttpClient;
     private ProgressBar progressBar;
@@ -67,12 +74,14 @@ public class TransportFragment extends Fragment implements View.OnClickListener,
     private FileAdapter adapter;
     private String fileName;
     private int copySize;
+    private boolean isLoadLocal;
     private List<BoxFile> toCopyFiles = new ArrayList<>();
 
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_transport, container, false);
+        disConnectLinear = (LinearLayout)view.findViewById(R.id.notice_linear_layout);
         tvbox = (TextView) view.findViewById(R.id.tvbox_button);
         mobile = (TextView) view.findViewById(R.id.mobile_button);
         listView = (ListView) view.findViewById(R.id.list_view);
@@ -98,9 +107,28 @@ public class TransportFragment extends Fragment implements View.OnClickListener,
 
     @Override
     public void fragmentInit() {
+        if (MyData.isConnect){
+            disConnectLinear.setVisibility(View.GONE);
+        }else {
+            disConnectLinear.setVisibility(View.VISIBLE);
+        }
+        if (MyData.boxFiles.size()==0||isLoadLocal)
         init();
     }
+    @Override
+    public  void fragmentHandleMsg(String msg){
+        if (msg.contains("connect_success")) {
+            init();
 
+        }else if (msg.contains("connect_failed")) {
+
+        }
+        if (MyData.isConnect){
+            disConnectLinear.setVisibility(View.GONE);
+        }else {
+            disConnectLinear.setVisibility(View.VISIBLE);
+        }
+    }
     private void setListener() {
         tvbox.setOnClickListener(this);
         mobile.setOnClickListener(this);
@@ -185,9 +213,10 @@ public class TransportFragment extends Fragment implements View.OnClickListener,
     }
 
     private void init() {
-        final String comment = changeToUnicode(MyData.boxFilePath);
         //progressBar.setVisibility(View.VISIBLE);
         if (MyData.isConnect) {
+            final String comment = changeToUnicode(MyData.boxFilePath);
+            isLoadLocal = false;
             MyData.boxFiles.clear();
             adapter.notifyDataSetChanged();
             new Thread() {
@@ -208,11 +237,16 @@ public class TransportFragment extends Fragment implements View.OnClickListener,
                 }
             }.start();
         }else {
-            String result = preferences.getString("last_path_info",context.getResources().getString(R.string.def_path_info));
-            MyData.boxFiles.clear();
-            adapter.notifyDataSetChanged();
-            Log.i("result", result);
-            handResult(result);
+            isLoadLocal = true;
+            boolean isDataSave = preferences.getBoolean("data_save_boxfile",false);
+            if (isDataSave) {
+                List<BoxFile> files = DataSupport.findAll(BoxFile.class);
+                MyData.boxFiles.clear();
+                MyData.boxFiles.addAll(files);
+                ListSort.sort(MyData.boxFiles);
+                adapter.notifyDataSetChanged();
+            }
+
         }
     }
 
@@ -360,9 +394,19 @@ public class TransportFragment extends Fragment implements View.OnClickListener,
     }
 
     private void handResult(String result) {
+
         if (result.equals("null")) {
             mHandler.sendEmptyMessage(0);
             return;
+        }
+        boolean isDataSave = preferences.getBoolean("data_save_boxfile",false);
+        boolean firstPath ;
+        if (MyData.boxFilePath.equals("")){
+            if (isDataSave)
+                DataSupport.deleteAll(BoxFile.class);
+            firstPath = true;
+        }else {
+            firstPath = false;
         }
         String[] files = result.split("\"type=\"");
         MyData.boxFilePath = files[0];
@@ -370,7 +414,14 @@ public class TransportFragment extends Fragment implements View.OnClickListener,
             String[] fils = files[i].split("\"name=\"");
             int type = Integer.parseInt(fils[0]);
             String[] fis = fils[1].split("\"size=\"");
-            MyData.boxFiles.add(new BoxFile(type, fis[0], fis[1], MyData.boxFilePath + "/" + fis[0]));
+            String[] fi = fis[1].split("\"time=\"");
+            BoxFile boxFile = new BoxFile(type, fis[0], fi[1],fi[0], MyData.boxFilePath + "/" + fis[0]);
+            if (firstPath) {
+                boxFile.save();
+                editor.putBoolean("data_save_boxfile", true);
+                editor.apply();
+            }
+            MyData.boxFiles.add(boxFile);
         }
         ListSort.sort(MyData.boxFiles);
         mHandler.sendEmptyMessage(0);

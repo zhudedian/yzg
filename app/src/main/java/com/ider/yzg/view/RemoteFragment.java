@@ -155,6 +155,7 @@ public class RemoteFragment extends Fragment implements View.OnTouchListener,Ges
     }
 
     private void sendMsg(String msg){
+        Log.i(TAG,msg);
         if (MyData.client!=null){
             MyData.client.sendMsg(msg);
         }

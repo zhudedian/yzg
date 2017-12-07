@@ -1,7 +1,6 @@
-package com.ider.yzg.view;
+package com.ider.yzg.adapter;
 
 import android.content.Context;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -49,9 +48,14 @@ public class ApkAdapter extends ArrayAdapter<ApkFile> {
         }
         viewHolder.name.setText(apkFile.getFileName());
         viewHolder.path.setText(apkFile.getFilePath());
-        viewHolder.size.setText(apkFile.getLabel()+"("+apkFile.getVersionName()+")"+apkFile.getFileSize());
-        Log.i(TAG, apkFile.getFileName()+"apkFile.getInstallLevel()="+apkFile.getInstallLevel());
-        if (apkFile.getInstallLevel()==1){
+        viewHolder.size.setText(apkFile.getLabel()+"("+context.getResources().getString(R.string.version)+apkFile.getVersionName()+")"+apkFile.getFileSize());
+//        Log.i(TAG, apkFile.getFileName()+"apkFile.getInstallLevel()="+apkFile.getInstallLevel());
+        if (apkFile.getInstallLevel()==0){
+            viewHolder.state.setText(context.getString(R.string.old_version));
+            viewHolder.state.setTextColor(context.getResources().getColor(R.color.apk_state_grey));
+            viewHolder.state.setBackgroundResource(R.drawable.apk_state_grey);
+
+        }else if (apkFile.getInstallLevel()==1){
             viewHolder.state.setText(context.getString(R.string.installed));
             viewHolder.state.setTextColor(context.getResources().getColor(R.color.apk_state_grey));
             viewHolder.state.setBackgroundResource(R.drawable.apk_state_grey);
@@ -71,6 +75,7 @@ public class ApkAdapter extends ArrayAdapter<ApkFile> {
         viewHolder.state.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                if (listener!=null)
                 listener.installClick(apkFile);
             }
         });

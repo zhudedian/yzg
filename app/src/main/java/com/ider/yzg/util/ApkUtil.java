@@ -31,13 +31,16 @@ import static android.R.attr.versionName;
 public class ApkUtil {
     private static String TAG = "ApkUtil";
     public static void isApkInstalls(List<ApkFile> localApps,List<TvApp> apps ){
+        Log.i(TAG,"isApkInstalls");
         for (int i = 0 ;i<localApps.size();i++){
             ApkFile apkFile = localApps.get(i);
             for (TvApp app:apps){
                 if (apkFile.getPackageName().equals(app.getPackageName())){
-                    Log.i(TAG,"packageName:"+apkFile.getPackageName());
+//                    Log.i(TAG,"packageName:"+apkFile.getPackageName());
                     if (apkFile.getVersionCode()>app.getVersionCode()){
                         apkFile.setInstallLevel(2);
+                    }else if (apkFile.getVersionCode()<app.getVersionCode()){
+                        apkFile.setInstallLevel(0);
                     }else {
                         apkFile.setInstallLevel(1);
                     }
@@ -49,7 +52,7 @@ public class ApkUtil {
             //localApps.set(i,apkFile);
 //            DataSupport.deleteAll(ApkFile.class,"filePath = ?",apkFile.getFilePath());
 //            apkFile.save();
-            Log.i(TAG,"packageName:"+apkFile.getPackageName()+";"+apkFile.getInstallLevel());
+//            Log.i(TAG,"packageName:"+apkFile.getPackageName()+";"+apkFile.getInstallLevel());
         }
     }
     public static void getApksInfo(Context context,List<ApkFile> apks){

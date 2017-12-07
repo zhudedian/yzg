@@ -1,5 +1,6 @@
 package com.ider.yzg.view;
 
+import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
@@ -22,18 +23,22 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.ider.yzg.R;
+import com.ider.yzg.adapter.ApkAdapter;
+import com.ider.yzg.adapter.AppsAdapter;
 import com.ider.yzg.db.ApkFile;
 import com.ider.yzg.db.BoxFile;
 import com.ider.yzg.db.MyData;
 import com.ider.yzg.db.TvApp;
 import com.ider.yzg.net.CustomerHttpClient;
 import com.ider.yzg.net.HTTPFileDownloadTask;
+import com.ider.yzg.net.UploadUtil;
 import com.ider.yzg.popu.PopuUtils;
 import com.ider.yzg.popu.PopupDialog;
 import com.ider.yzg.popu.Popus;
 import com.ider.yzg.util.ApkUtil;
 import com.ider.yzg.util.FileUtil;
 import com.ider.yzg.util.FragmentInter;
+import com.ider.yzg.util.TvAppSort;
 
 import org.apache.http.client.HttpClient;
 import org.litepal.crud.DataSupport;
@@ -65,6 +70,8 @@ public class AppsFragment extends Fragment implements View.OnClickListener,Fragm
     private PackageManager packageManager;
     private TextView recommend,local,uninstall;
     private ProgressBar progressBar;
+    private ProgressDialog progressDialog;
+    private LinearLayout disConnectLinear;
     private ListView listView;
     private File[] files;
     private ApkAdapter adapter;
@@ -85,6 +92,7 @@ public class AppsFragment extends Fragment implements View.OnClickListener,Fragm
     private String rootPath = Environment.getExternalStorageDirectory().getPath();
     private List<TvApp> apps = new ArrayList<>();
     private String picDownPath;
+    private boolean isLoadLocal;
     private List<String> downApps = new ArrayList<>();
     private boolean isDownload = false;
     private boolean isFinding = false;
@@ -94,6 +102,7 @@ public class AppsFragment extends Fragment implements View.OnClickListener,Fragm
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState){
         View view = inflater.inflate(R.layout.fragment_apps,container,false);
+        disConnectLinear = (LinearLayout)view.findViewById(R.id.notice_linear_layout);
         recommend = (TextView) view.findViewById(R.id.recommend_button);
         local = (TextView) view.findViewById(R.id.local_button);
         uninstall = (TextView)view.findViewById(R.id.uninstall_button);
@@ -109,23 +118,50 @@ public class AppsFragment extends Fragment implements View.OnClickListener,Fragm
         initData();
         setListener();
         local.performClick();
+        if (apps==null||apps.size()==0||isLoadLocal)
         initTvState();
     }
     @Override
     public void fragmentInit() {
         Log.i("fragmentInit",localApps.size()+"");
+        if (MyData.isConnect){
+            disConnectLinear.setVisibility(View.GONE);
+        }else {
+            disConnectLinear.setVisibility(View.VISIBLE);
+        }
         if (page == 1){
             recommend.performClick();
         }else if (page == 2){
-            local.performClick();
+            if (localApps.size()==0||(isLoadLocal&&MyData.isConnect)) {
+                local.performClick();
+                initTvState();
+            }
+
         }else if (page ==3){
-            uninstall.performClick();
+            if (apps.size()==0||isLoadLocal) {
+                uninstall.performClick();
+            }
         }
 
     }
+    @Override
+    public  void fragmentHandleMsg(String msg){
+        if (msg.contains("connect_success")) {
+            initTvState();
+        }else if (msg.contains("connect_failed")) {
+            isTvAppOk = false;
+        }else if (msg.contains("InUnCp")) {
+            initTvApp();
+        }
+        if (MyData.isConnect){
+            disConnectLinear.setVisibility(View.GONE);
+        }else {
+            disConnectLinear.setVisibility(View.VISIBLE);
+        }
+    }
 
     private void initData(){
-        preferences = getContext().getSharedPreferences("yzg_prefers", Context.MODE_PRIVATE);
+        preferences = context.getSharedPreferences("yzg_prefers", Context.MODE_PRIVATE);
         editor = preferences.edit();
         okHttpClient = new OkHttpClient.Builder().connectTimeout(20, TimeUnit.SECONDS).readTimeout(60, TimeUnit.SECONDS).build();
         mHttpClient = CustomerHttpClient.getHttpClient();
@@ -176,7 +212,7 @@ public class AppsFragment extends Fragment implements View.OnClickListener,Fragm
         recommend.setTextColor(getResources().getColor(R.color.white));
         uninstall.setTextColor(getResources().getColor(R.color.white));
         page = 2;
-        if (adapter!=null&&localApps.size()>0){
+        if (adapter!=null&&localApps.size()>0&&!isLoadLocal){
             listView.setAdapter(adapter);
             if (localApps.size()==0){
                 progressBar.setVisibility(View.VISIBLE);
@@ -195,7 +231,7 @@ public class AppsFragment extends Fragment implements View.OnClickListener,Fragm
         local.setTextColor(getResources().getColor(R.color.white));
         uninstall.setTextColor(getResources().getColor(R.color.black));
         page = 3;
-        if (appsAdapter!=null&&apps.size()>0){
+        if (appsAdapter!=null&&apps.size()>0&&!isLoadLocal){
             listView.setAdapter(appsAdapter);
             if (apps.size()==0){
                 progressBar.setVisibility(View.VISIBLE);
@@ -207,7 +243,51 @@ public class AppsFragment extends Fragment implements View.OnClickListener,Fragm
         }
     }
     private void initTvState(){
+        if (appsAdapter==null) {
+            appsAdapter = new AppsAdapter(context, R.layout.apk_list_item, apps);
+            appsAdapter.setOnApkInstallClickListener(new AppsAdapter.OnApkInstallClickListener() {
+                @Override
+                public void installClick(TvApp tvApp) {
+                    if (MyData.isConnect) {
+                        if (tvApp.getType().equals("1")) {
+                            String packageName = tvApp.getPackageName();
+                            Log.i(TAG, tvApp.getPackageName());
+                            final String comment = changeToUnicode(packageName);
+                            new Thread() {
+                                @Override
+                                public void run() {
+                                    try {
+                                        Request request = new Request.Builder().header("comment", "\"uninstall=\"" + comment)
+                                                .url(MyData.downUrl).build();
+                                        Call call = okHttpClient.newCall(request);
+                                        Response response = call.execute();
+                                        final String result = response.body().string();
+                                        Log.i("result", result);
+                                        if (!result.equals("")) {
+                                            getActivity().runOnUiThread(new Runnable() {
+                                                @Override
+                                                public void run() {
+                                                    Toast.makeText(context, result, Toast.LENGTH_SHORT).show();
+                                                }
+                                            });
+                                        }
+                                    } catch (Exception e) {
+                                        e.printStackTrace();
+                                    }
+                                }
+                            }.start();
+                            showUninstallDialog(tvApp);
+                        }else {
+                            Toast.makeText(context,context.getString(R.string.system_app_uninstall_notice),Toast.LENGTH_SHORT).show();
+                        }
+                    }else {
+                        Toast.makeText(context,context.getString(R.string.disconnect_notice2),Toast.LENGTH_SHORT).show();
+                    }
+                }
+            });
+        }
         if (MyData.isConnect) {
+            isLoadLocal = false;
             final String comment = changeToUnicode("\"RequestAllApps\"");
 
             new Thread() {
@@ -227,47 +307,20 @@ public class AppsFragment extends Fragment implements View.OnClickListener,Fragm
                 }
             }.start();
         }else {
-           List<TvApp> tvApps = DataSupport.findAll(TvApp.class);
-            apps.addAll(tvApps);
+            isLoadLocal = true;
+            boolean isDataSave = preferences.getBoolean("data_save_tvapp", false);
+            if (isDataSave) {
+                List<TvApp> tvApps = DataSupport.findAll(TvApp.class);
+                apps.clear();
+                apps.addAll(tvApps);
+                TvAppSort.sort(apps);
+            }
             mHandler.sendEmptyMessage(0);
         }
     }
     private void initTvApp(){
         progressBar.setVisibility(View.VISIBLE);
         page = 3;
-        appsAdapter = new AppsAdapter(context,R.layout.apk_list_item,apps);
-        appsAdapter.setOnApkInstallClickListener(new AppsAdapter.OnApkInstallClickListener() {
-            @Override
-            public void installClick(TvApp tvApp) {
-                String packageName = tvApp.getPackageName();
-                Log.i(TAG,tvApp.getPackageName());
-                final String comment = changeToUnicode(packageName);
-                new Thread() {
-                    @Override
-                    public void run() {
-                        try {
-                            Request request = new Request.Builder().header("comment", "\"uninstall=\"" + comment)
-                                    .url(MyData.downUrl).build();
-                            Call call = okHttpClient.newCall(request);
-                            Response response = call.execute();
-                            final String result = response.body().string();
-                            Log.i("result", result);
-                            if (!result.equals("")) {
-                                getActivity().runOnUiThread(new Runnable() {
-                                    @Override
-                                    public void run() {
-                                        Toast.makeText(context, result, Toast.LENGTH_SHORT).show();
-                                    }
-                                });
-                            }
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                        }
-                    }
-                }.start();
-                showUninstallDialog(tvApp);
-            }
-        });
         initTvState();
     }
     private void showApk() {
@@ -276,7 +329,6 @@ public class AppsFragment extends Fragment implements View.OnClickListener,Fragm
         isDataSave = preferences.getBoolean("data_save", false);
         if (isDataSave) {
             if (localApps==null){
-                localApps = new ArrayList<>();
                 localApps = DataSupport.findAll(ApkFile.class);
                 for (int i = 0;i<localApps.size();i++){
                     ApkFile apk = localApps.get(i);
@@ -296,6 +348,9 @@ public class AppsFragment extends Fragment implements View.OnClickListener,Fragm
                 @Override
                 public void installClick(ApkFile apkFile) {
                     Log.i(TAG,"apkFile.getFileName()="+apkFile.getFileName());
+                    if (MyData.isConnect&&apkFile.getInstallLevel()>1){
+                        showInstallDialog(apkFile);
+                    }
                 }
             });
             mHandler.sendEmptyMessage(0);
@@ -362,7 +417,7 @@ public class AppsFragment extends Fragment implements View.OnClickListener,Fragm
                         findApks = new ArrayList<ApkFile>();
                         findApk(files, true);
                         isFinding = false;
-                        localApps.addAll(findApks);
+                        //localApps.addAll(findApks);
                         ApkUtil.getApksInfo(context, localApps);
                         mHandler.sendEmptyMessage(0);
                         isLocalOk = true;
@@ -387,9 +442,9 @@ public class AppsFragment extends Fragment implements View.OnClickListener,Fragm
                             localApps.add(apkFile);
                         }
                         mHandler.sendEmptyMessage(0);
-//                        if (isDataSave) {
-//                            DataSupport.deleteAll(ApkFile.class, "filePath = ?", f.getPath());
-//                        }
+                        if (isDataSave) {
+                            DataSupport.deleteAll(ApkFile.class, "filePath = ?", f.getPath());
+                        }
                         apkFile.save();
                     }
                 }else {
@@ -430,7 +485,7 @@ public class AppsFragment extends Fragment implements View.OnClickListener,Fragm
             mHandler.sendEmptyMessage(0);
             return;
         }
-        boolean isDataSave = preferences.getBoolean("data_save2", false);
+        boolean isDataSave = preferences.getBoolean("data_save_tvapp", false);
         synchronized (apps) {
             String[] files = result.split("\"type=\"");
             picDownPath = files[0];
@@ -445,29 +500,32 @@ public class AppsFragment extends Fragment implements View.OnClickListener,Fragm
                 String[] f2 = f[1].split("\"verN=\"");
                 int verC = Integer.parseInt(f2[0]);
                 String verN = f2[1];
-                Log.i(TAG, "pckn=" + pckn + "verC=" + verC);
+                //Log.i(TAG, "pckn=" + pckn + "verC=" + verC);
                 TvApp app = new TvApp(type, label, pckn, verC, verN);
                 if (isDataSave)
                 DataSupport.deleteAll(TvApp.class, "packageName = ?", app.getPackageName());
                 app.save();
-                editor.putBoolean("data_save2", true);
+                editor.putBoolean("data_save_tvapp", true);
                 editor.apply();
                 apps.add(app);
                 File file = new File(MyData.picIconSavePath + File.separator + pckn + ".jpg");
-                Log.i(TAG, "pckn=" + pckn);
+                //Log.i(TAG, "pckn=" + pckn);
                 if (!downApps.contains(app) && !file.exists()) {
                     downApps.add(app.getPackageName());
                 }
             }
+            TvAppSort.sort(apps);
         }
         isTvAppOk = true;
         mHandler.sendEmptyMessage(1);
         if (!isDownload&&downApps.size()>0) {
             downloadPic();
         }
+
         mHandler.sendEmptyMessage(0);
     }
     private void initLocalState(){
+        Log.i(TAG,"initLocalState");
         if (localApps.size()>0&&apps.size()>0){
             new Thread(){
                 @Override
@@ -490,6 +548,77 @@ public class AppsFragment extends Fragment implements View.OnClickListener,Fragm
         }
         String unicode = stringBuffer.toString();
         return unicode;
+    }
+    private void showInstallDialog(final ApkFile apkFile){
+
+        View view = View.inflate(getContext(), R.layout.confirm_upload, null);
+        Popus popup = new Popus();
+        popup.setvWidth(-1);
+        popup.setvHeight(-1);
+        popup.setClickable(true);
+        popup.setAnimFadeInOut(R.style.PopupWindowAnimation);
+        popup.setCustomView(view);
+        popup.setContentView(R.layout.fragment_apps);
+        PopupDialog popupDialog = PopuUtils.createPopupDialog(getContext(), popup);
+        popupDialog.showAtLocation(listView, Gravity.CENTER, 0, 0);
+        TextView title = (TextView)view.findViewById(R.id.title);
+        LinearLayout allSelect = (LinearLayout)view.findViewById(R.id.all_select);
+        final CheckBox allcheck = (CheckBox)view.findViewById(R.id.all_select_check);
+        TextView fileName = (TextView)view.findViewById(R.id.file_name);
+        Button cancel = (Button)view.findViewById(R.id.cancel_action);
+        Button ok = (Button)view.findViewById(R.id.ok_action);
+        allSelect.setVisibility(View.GONE);
+        title.setText("确认安装");
+        fileName.setText(apkFile.getFileName());
+        cancel.setText("取消");
+        cancel.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                PopuUtils.dismissPopupDialog();
+            }
+        });
+        ok.setText("安装");
+        ok.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                final String apkPath = apkFile.getFilePath();
+                showProgressDialog(apkFile.getFileName());
+                new Thread(){
+                    @Override
+                    public void run(){
+                        File file = new File(apkPath);
+                        if(file!=null)
+                        {
+                            int res = UploadUtil.uploadFile( file, MyData.installUrl,"");
+                            Log.i("tag","request="+res);
+                            if (res==200){
+                                apkFile.setInstallLevel(1);
+                                mHandler.sendEmptyMessage(3);
+                            }else {
+                                mHandler.sendEmptyMessage(4);
+                            }
+
+                        }
+                    }
+                }.start();
+                PopuUtils.dismissPopupDialog();
+            }
+        });
+        allcheck.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+            }
+        });
+    }
+    private void showProgressDialog(String name){
+        progressDialog = new ProgressDialog(getContext());
+        progressDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
+        progressDialog.setCancelable(false);// 设置是否可以通过点击Back键取消
+        progressDialog.setCanceledOnTouchOutside(false);// 设置在点击Dialog外是否取消Dialog进度条
+        progressDialog.setTitle("正在安装，请稍后……");
+        progressDialog.setMessage(name);
+        progressDialog.show();
     }
     private void showUninstallDialog(TvApp app){
 
@@ -555,6 +684,7 @@ public class AppsFragment extends Fragment implements View.OnClickListener,Fragm
                     }
                 }.start();
                 PopuUtils.dismissPopupDialog();
+
             }
         });
         allcheck.setOnClickListener(new View.OnClickListener() {
@@ -783,14 +913,15 @@ public class AppsFragment extends Fragment implements View.OnClickListener,Fragm
 //                case 2:
 //                    Toast.makeText(getContext(),installResult,Toast.LENGTH_SHORT).show();
 //                    break;
-//                case 3:
-//                    progressDialog.dismiss();
-//                    Toast.makeText(getContext(),"安装成功",Toast.LENGTH_SHORT).show();
-//                    break;
-//                case 4:
-//                    progressDialog.dismiss();
-//                    Toast.makeText(getContext(),"安装失败",Toast.LENGTH_SHORT).show();
-//                    break;
+                case 3:
+                    progressDialog.dismiss();
+                    initTvState();
+                    Toast.makeText(getContext(),"安装成功",Toast.LENGTH_SHORT).show();
+                    break;
+                case 4:
+                    progressDialog.dismiss();
+                    Toast.makeText(getContext(),"安装失败",Toast.LENGTH_SHORT).show();
+                    break;
                 default:
                     break;
             }

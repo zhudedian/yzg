@@ -23,10 +23,12 @@ import java.util.List;
 
 public class FileAdapter extends ArrayAdapter<BoxFile> {
 
+    private Context context;
     private int resourceId;
     private List<BoxFile> selectFiles;
     public FileAdapter(Context context, int textViewResourceId, List<BoxFile> objects, List<BoxFile> selects){
         super(context,textViewResourceId,objects);
+        this.context = context;
         resourceId = textViewResourceId;
         selectFiles = selects;
     }
@@ -39,6 +41,7 @@ public class FileAdapter extends ArrayAdapter<BoxFile> {
             view = LayoutInflater.from(getContext()).inflate(resourceId,parent,false);
             viewHolder =new FileAdapter.ViewHolder();
             viewHolder.name = (TextView)view.findViewById(R.id.file_name);
+            viewHolder.path = (TextView)view.findViewById(R.id.file_path);
             viewHolder.size = (TextView)view.findViewById(R.id.file_size);
             viewHolder.checkBox = (CheckBox)view.findViewById(R.id.checkbox);
             viewHolder.draw = (ImageView)view.findViewById(R.id.file_image);
@@ -49,9 +52,10 @@ public class FileAdapter extends ArrayAdapter<BoxFile> {
         }
         viewHolder.name.setText(boxFile.getFileName());
 //        viewHolder.name.setMovementMethod(ScrollingMovementMethod.getInstance());
+        viewHolder.path.setText(boxFile.getCreateTime());
         viewHolder.size.setText(boxFile.getFileSize());
         if (boxFile.getFileType()==1){
-            viewHolder.size.setVisibility(View.GONE);
+            viewHolder.size.setText(boxFile.getFileSize()+context.getResources().getString(R.string.file_count_end));
             viewHolder.draw.setImageResource(R.drawable.item_dir);
         }else if (boxFile.getFileType()==2){
             viewHolder.size.setVisibility(View.VISIBLE);
@@ -101,7 +105,7 @@ public class FileAdapter extends ArrayAdapter<BoxFile> {
     }
     class ViewHolder{
         ImageView draw;
-        TextView name,size;
+        TextView name,size,path;
         CheckBox checkBox;
     }
 }

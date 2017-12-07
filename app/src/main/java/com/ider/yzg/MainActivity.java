@@ -186,9 +186,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                         String pos = msg.obj.toString();
                         Log.i("msg",pos);
                         if (pos.contains("In")) {
-                            Intent intent = new Intent("Box_Message");
-                            intent.putExtra("info", pos);
-                            MyApplication.getContext().sendBroadcast(intent);
+//                            Intent intent = new Intent("Box_Message");
+//                            intent.putExtra("info", pos);
+//                            MyApplication.getContext().sendBroadcast(intent);
+                            fragmentInter.fragmentHandleMsg(pos);
                             endCount = 0;
                         }else {
                             if (endCount >= 4){
@@ -210,9 +211,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     }
                 };
             }
-
+            if (fragmentInter!=null)
+            fragmentInter.fragmentHandleMsg("connect_success");
         }else {
-
+            if (fragmentInter!=null)
+                fragmentInter.fragmentHandleMsg("connect_failed");
         }
     }
     @Override

@@ -1,4 +1,4 @@
-package com.ider.yzg.view;
+package com.ider.yzg.adapter;
 
 import android.content.Context;
 import android.graphics.Bitmap;
@@ -60,7 +60,11 @@ public class AppsAdapter extends ArrayAdapter<TvApp> {
             viewHolder.state.setText(context.getString(R.string.uninstalled));
             viewHolder.state.setTextColor(context.getResources().getColor(R.color.apk_state_grey));
             viewHolder.state.setBackgroundResource(R.drawable.apk_state_grey);
-        }else {
+        }else if (tvApp.getType().equals("0")){
+            viewHolder.state.setText(context.getString(R.string.system_app));
+            viewHolder.state.setTextColor(context.getResources().getColor(R.color.apk_state_grey));
+            viewHolder.state.setBackgroundResource(R.drawable.apk_state_grey);
+        }else{
             viewHolder.state.setText(context.getString(R.string.uninstall));
             viewHolder.state.setTextColor(context.getResources().getColor(R.color.apk_state_yellow));
             viewHolder.state.setBackgroundResource(R.drawable.apk_state_yellow);

@@ -1,10 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <litepal>
     <dbname value="ApkFile" />
-    <version value="2" />
+    <version value="1" />
 
     <list>
         <mapping class="com.ider.yzg.db.ApkFile"/>
         <mapping class="com.ider.yzg.db.TvApp"/>
+        <mapping class="com.ider.yzg.db.BoxFile"/>
     </list>
 </litepal>
