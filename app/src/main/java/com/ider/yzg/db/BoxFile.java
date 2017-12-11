@@ -12,6 +12,7 @@ public class BoxFile extends DataSupport {
 
     private boolean selected;
 
+    private boolean isOpenOp;
     private String fileName;
 
     private String filePath;
@@ -93,6 +94,14 @@ public class BoxFile extends DataSupport {
     }
     public String getCreateTime(){
         return createTime;
+    }
+
+    public void setOpenOp(boolean isOpenOp){
+        this.isOpenOp = isOpenOp;
+    }
+
+    public boolean isOpenOp(){
+        return isOpenOp;
     }
 
     @Override

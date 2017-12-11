@@ -8,4 +8,7 @@
     <color name="grey_text_bottom">#7d7c81</color>
     <color name="apk_state_yellow">#d7b659</color>
     <color name="apk_state_grey">#5e5e5e</color>
+    <color name="item_menu_linear_back">#171717</color>
+    <color name="item_menu_select">#757575</color>
+    <color name="item_menu_unselect">#d5d5d5</color>
 </resources>

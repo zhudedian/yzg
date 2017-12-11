@@ -35,6 +35,7 @@ import com.ider.yzg.db.TvApp;
 import com.ider.yzg.popu.PopuUtils;
 import com.ider.yzg.popu.PopupDialog;
 import com.ider.yzg.popu.Popus;
+import com.ider.yzg.util.FileFind;
 import com.ider.yzg.util.FragmentInter;
 
 import com.ider.yzg.util.ListSort;
@@ -52,6 +53,7 @@ import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
 
+import static android.R.attr.id;
 import static com.ider.yzg.R.id.apps;
 import static com.ider.yzg.util.SocketClient.mHandler;
 
@@ -71,11 +73,16 @@ public class TransportFragment extends Fragment implements View.OnClickListener,
     private OkHttpClient okHttpClient;
     private ProgressBar progressBar;
     private ListView listView;
-    private FileAdapter adapter;
+    private FileAdapter adapter,boxAdapter;
     private String fileName;
     private int copySize;
     private boolean isLoadLocal;
+    private BoxFile openOpBoxFile;
     private List<BoxFile> toCopyFiles = new ArrayList<>();
+
+    private List<BoxFile> moFiles;
+    private List<BoxFile> moSelectFiles = new ArrayList<>();
+    private int page = 1;
 
 
     @Override
@@ -97,8 +104,14 @@ public class TransportFragment extends Fragment implements View.OnClickListener,
         preferences = context.getSharedPreferences("yzg_prefers", Context.MODE_PRIVATE);
         editor = preferences.edit();
         okHttpClient = new OkHttpClient.Builder().connectTimeout(20, TimeUnit.SECONDS).readTimeout(60, TimeUnit.SECONDS).build();
-        adapter = new FileAdapter(getContext(), R.layout.file_list_item, MyData.boxFiles, MyData.selectBoxFiles);
-        listView.setAdapter(adapter);
+        boxAdapter = new FileAdapter(getContext(), R.layout.box_file_list_item, MyData.boxFiles, MyData.selectBoxFiles);
+        boxAdapter.setOnMenuOpClickListener(new FileAdapter.OnMenuOpClickListener() {
+            @Override
+            public void menuClick(View view,BoxFile boxFile) {
+                menuOnClick(view,boxFile);
+            }
+        });
+        listView.setAdapter(boxAdapter);
         setListener();
         tvbox.performClick();
 
@@ -158,7 +171,7 @@ public class TransportFragment extends Fragment implements View.OnClickListener,
                         } else {
                             MyData.selectBoxFiles.add(boxFile);
                         }
-                        adapter.notifyDataSetChanged();
+                        boxAdapter.notifyDataSetChanged();
                     }
                 }else {
                     Toast.makeText(context,context.getString(R.string.disconnect_notice),Toast.LENGTH_SHORT).show();
@@ -169,13 +182,38 @@ public class TransportFragment extends Fragment implements View.OnClickListener,
             @Override
             public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
                 MyData.isShowCheck = true;
-                adapter.notifyDataSetChanged();
+                boxAdapter.notifyDataSetChanged();
                 return true;
             }
         });
 
     }
 
+    private void menuOnClick(View view,BoxFile boxFile) {
+        Log.i("menuOnClick", "menuOnClick");
+        switch (view.getId()){
+            case R.id.item_menu_op:
+                if (openOpBoxFile!=null&&openOpBoxFile.equals(boxFile)) {
+                    if (boxFile.isOpenOp()) {
+                        boxFile.setOpenOp(false);
+                    } else {
+                        boxFile.setOpenOp(true);
+                    }
+                }else {
+                    if (openOpBoxFile!=null){
+                        openOpBoxFile.setOpenOp(false);
+                    }
+                    openOpBoxFile = boxFile;
+                    boxFile.setOpenOp(true);
+                }
+                boxAdapter.notifyDataSetChanged();
+                break;
+            case R.id.item_remove:
+                MyData.boxFiles.remove(boxFile);
+                boxAdapter.notifyDataSetChanged();
+                break;
+        }
+    }
     @Override
     public void onClick(View view) {
         switch (view.getId()) {
@@ -214,39 +252,45 @@ public class TransportFragment extends Fragment implements View.OnClickListener,
 
     private void init() {
         //progressBar.setVisibility(View.VISIBLE);
-        if (MyData.isConnect) {
-            final String comment = changeToUnicode(MyData.boxFilePath);
-            isLoadLocal = false;
-            MyData.boxFiles.clear();
-            adapter.notifyDataSetChanged();
-            new Thread() {
-                @Override
-                public void run() {
-                    try {
-                        Request request = new Request.Builder().header("comment", comment)
-                                .url(MyData.downUrl).build();
-                        Call call = okHttpClient.newCall(request);
-                        Response response = call.execute();
-                        String result = response.body().string();
-                        Log.i("result", result);
-                        editor.putString("last_path_info",result);
-                        handResult(result);
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
-                }
-            }.start();
-        }else {
-            isLoadLocal = true;
-            boolean isDataSave = preferences.getBoolean("data_save_boxfile",false);
-            if (isDataSave) {
-                List<BoxFile> files = DataSupport.findAll(BoxFile.class);
+        if (page == 1) {
+            if (MyData.isConnect) {
+                final String comment = changeToUnicode(MyData.boxFilePath);
+                isLoadLocal = false;
                 MyData.boxFiles.clear();
-                MyData.boxFiles.addAll(files);
-                ListSort.sort(MyData.boxFiles);
-                adapter.notifyDataSetChanged();
-            }
+                boxAdapter.notifyDataSetChanged();
+                new Thread() {
+                    @Override
+                    public void run() {
+                        try {
+                            Request request = new Request.Builder().header("comment", comment)
+                                    .url(MyData.downUrl).build();
+                            Call call = okHttpClient.newCall(request);
+                            Response response = call.execute();
+                            String result = response.body().string();
+                            Log.i("result", result);
+                            editor.putString("last_path_info", result);
+                            handResult(result);
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }.start();
+            } else {
+                isLoadLocal = true;
+                boolean isDataSave = preferences.getBoolean("data_save_boxfile", false);
+                if (isDataSave) {
+                    List<BoxFile> files = DataSupport.findAll(BoxFile.class);
+                    MyData.boxFiles.clear();
+                    MyData.boxFiles.addAll(files);
+                    ListSort.sort(MyData.boxFiles);
+                    boxAdapter.notifyDataSetChanged();
+                }
 
+            }
+        }else {
+            FileFind.findFiles(moFiles,MyData.fileSelect);
+            adapter = new FileAdapter(context,R.layout.file_list_item,moFiles,moSelectFiles);
+            listView.setAdapter(adapter);
         }
     }
 
@@ -258,7 +302,7 @@ public class TransportFragment extends Fragment implements View.OnClickListener,
         final String comment = changeToUnicode(fileName);
         progressBar.setVisibility(View.VISIBLE);
         MyData.boxFiles.clear();
-        adapter.notifyDataSetChanged();
+        boxAdapter.notifyDataSetChanged();
         new Thread() {
             @Override
             public void run() {
@@ -283,7 +327,7 @@ public class TransportFragment extends Fragment implements View.OnClickListener,
         final String comment = changeToUnicode(filePath);
         progressBar.setVisibility(View.VISIBLE);
         MyData.boxFiles.clear();
-        adapter.notifyDataSetChanged();
+        boxAdapter.notifyDataSetChanged();
         new Thread() {
             @Override
             public void run() {
@@ -308,7 +352,7 @@ public class TransportFragment extends Fragment implements View.OnClickListener,
         final String comment = changeToUnicode(filePath);
         progressBar.setVisibility(View.VISIBLE);
         MyData.boxFiles.clear();
-        adapter.notifyDataSetChanged();
+        boxAdapter.notifyDataSetChanged();
         new Thread() {
             @Override
             public void run() {
@@ -734,7 +778,7 @@ public class TransportFragment extends Fragment implements View.OnClickListener,
             switch (msg.what){
                 case 0:
 //                    filePath.setText(MyData.boxFilePath);
-                    adapter.notifyDataSetChanged();
+                    boxAdapter.notifyDataSetChanged();
                     progressBar.setVisibility(View.GONE);
                     if (MyData.boxFiles.size()==0){
 //                        menuRel.setVisibility(View.GONE);

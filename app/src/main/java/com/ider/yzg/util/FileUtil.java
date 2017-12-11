@@ -2,6 +2,7 @@ package com.ider.yzg.util;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.text.SimpleDateFormat;
 
 /**
  * Created by Eric on 2017/8/29.
@@ -110,6 +111,16 @@ public class FileUtil {
         }
 
         return type;
+    }
+    public static String getTime(File file){
+        if (file.exists()) {
+            long time = file.lastModified();
+            SimpleDateFormat formatter = new
+                    SimpleDateFormat("yyyy-MM-dd HH:mm");
+            String result = formatter.format(time);
+            return result;
+        }
+        return "";
     }
     public static boolean isApk(File file){
         if (getFileType(file).equals(str_apk_type)){
