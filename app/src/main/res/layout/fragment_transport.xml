@@ -76,6 +76,23 @@
                 android:layout_height="1dp"
                 android:background="#0e0e0e"></View>
         </LinearLayout>
+        <LinearLayout
+            android:id="@+id/path_linear_view"
+            android:orientation="vertical"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            >
+            <TextView
+                android:id="@+id/path_text_view"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textSize="12sp"
+                android:textColor="#757575"/>
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="#0e0e0e"></View>
+        </LinearLayout>
         <ListView
             android:id="@+id/list_view"
             android:layout_width="match_parent"

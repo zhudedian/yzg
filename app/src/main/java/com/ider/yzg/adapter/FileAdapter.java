@@ -67,8 +67,16 @@ public class FileAdapter extends ArrayAdapter<BoxFile> {
         viewHolder.path.setText(boxFile.getCreateTime());
         viewHolder.size.setText(boxFile.getFileSize());
         if (boxFile.getFileType()==1){
-            viewHolder.size.setText(boxFile.getFileSize()+context.getResources().getString(R.string.file_count_end));
-            viewHolder.draw.setImageResource(R.drawable.item_tvdir);
+            if (boxFile.getFileSize().equals("0")){
+                viewHolder.size.setText(context.getResources().getString(R.string.empty_dir));
+            }else {
+                viewHolder.size.setText(boxFile.getFileSize() + context.getResources().getString(R.string.file_count_end));
+            }
+            if (resourceId==R.layout.file_list_item){
+                viewHolder.draw.setImageResource(R.drawable.item_dir);
+            }else {
+                viewHolder.draw.setImageResource(R.drawable.item_tvdir);
+            }
         }else if (boxFile.getFileType()==2){
             viewHolder.size.setVisibility(View.VISIBLE);
             viewHolder.draw.setImageResource(R.drawable.item_video);

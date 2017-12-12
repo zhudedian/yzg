@@ -122,6 +122,17 @@ public class FileUtil {
         }
         return "";
     }
+    public static String getFileCount(File file){
+        if (file.isDirectory()){
+            File[] files = file.listFiles();
+            if (files!=null){
+                return files.length+"";
+            }else {
+                return "0";
+            }
+        }
+        return "0";
+    }
     public static boolean isApk(File file){
         if (getFileType(file).equals(str_apk_type)){
             return true;

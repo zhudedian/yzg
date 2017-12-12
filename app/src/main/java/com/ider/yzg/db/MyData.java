@@ -37,5 +37,10 @@ public class MyData {
     public static String picIconSavePath;
     public static String screenshotSavePath;
     public static SocketClient client;
+    public static boolean isRequesting;
+    public static String disPlayMode = "trans";
+
+    public final static String NORMAL = "normal";
+    public final static String TRANS = "trans";
 
 }

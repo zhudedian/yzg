@@ -8,6 +8,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.Handler;
 import android.os.Message;
 import android.support.v4.app.ActivityCompat;
@@ -39,6 +40,7 @@ import com.ider.yzg.util.FileFind;
 import com.ider.yzg.util.FragmentInter;
 
 import com.ider.yzg.util.ListSort;
+import com.ider.yzg.util.RequestUtil;
 import com.ider.yzg.util.TvAppSort;
 
 import org.litepal.crud.DataSupport;
@@ -53,8 +55,10 @@ import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
 
+import static android.R.attr.breadCrumbShortTitle;
 import static android.R.attr.id;
 import static com.ider.yzg.R.id.apps;
+import static com.ider.yzg.db.MyData.fileSelect;
 import static com.ider.yzg.util.SocketClient.mHandler;
 
 /**
@@ -68,7 +72,8 @@ public class TransportFragment extends Fragment implements View.OnClickListener,
     private SharedPreferences.Editor editor;
 
     private TextView tvbox, mobile;
-    private LinearLayout disConnectLinear;
+    private LinearLayout disConnectLinear,pathLinearView;
+    private TextView pathTextView;
     private ProgressDialog progressDialog;
     private OkHttpClient okHttpClient;
     private ProgressBar progressBar;
@@ -77,10 +82,11 @@ public class TransportFragment extends Fragment implements View.OnClickListener,
     private String fileName;
     private int copySize;
     private boolean isLoadLocal;
+    private boolean isIniting = false;
     private BoxFile openOpBoxFile;
     private List<BoxFile> toCopyFiles = new ArrayList<>();
 
-    private List<BoxFile> moFiles;
+    private List<BoxFile> moFiles = new ArrayList<>();
     private List<BoxFile> moSelectFiles = new ArrayList<>();
     private int page = 1;
 
@@ -89,6 +95,8 @@ public class TransportFragment extends Fragment implements View.OnClickListener,
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_transport, container, false);
         disConnectLinear = (LinearLayout)view.findViewById(R.id.notice_linear_layout);
+        pathLinearView = (LinearLayout)view.findViewById(R.id.path_linear_view);
+        pathTextView = (TextView)view.findViewById(R.id.path_text_view);
         tvbox = (TextView) view.findViewById(R.id.tvbox_button);
         mobile = (TextView) view.findViewById(R.id.mobile_button);
         listView = (ListView) view.findViewById(R.id.list_view);
@@ -104,27 +112,32 @@ public class TransportFragment extends Fragment implements View.OnClickListener,
         preferences = context.getSharedPreferences("yzg_prefers", Context.MODE_PRIVATE);
         editor = preferences.edit();
         okHttpClient = new OkHttpClient.Builder().connectTimeout(20, TimeUnit.SECONDS).readTimeout(60, TimeUnit.SECONDS).build();
-        boxAdapter = new FileAdapter(getContext(), R.layout.box_file_list_item, MyData.boxFiles, MyData.selectBoxFiles);
-        boxAdapter.setOnMenuOpClickListener(new FileAdapter.OnMenuOpClickListener() {
-            @Override
-            public void menuClick(View view,BoxFile boxFile) {
-                menuOnClick(view,boxFile);
-            }
-        });
-        listView.setAdapter(boxAdapter);
         setListener();
-        tvbox.performClick();
-
-
+        if (adapter==null){
+            adapter = new FileAdapter(context,R.layout.file_list_item,moFiles,moSelectFiles);
+            adapter.setOnMenuOpClickListener(new FileAdapter.OnMenuOpClickListener() {
+                @Override
+                public void menuClick(View view,BoxFile boxFile) {
+                    menuOnClick(view,boxFile);
+                }
+            });
+            boxAdapter = new FileAdapter(getContext(), R.layout.box_file_list_item, MyData.boxFiles, MyData.selectBoxFiles);
+            boxAdapter.setOnMenuOpClickListener(new FileAdapter.OnMenuOpClickListener() {
+                @Override
+                public void menuClick(View view,BoxFile boxFile) {
+                    menuOnClick(view,boxFile);
+                }
+            });
+            listView.setAdapter(boxAdapter);
+            tvbox.performClick();
+        }
+        initView();
+        mHandler.sendEmptyMessage(0);
     }
 
     @Override
     public void fragmentInit() {
-        if (MyData.isConnect){
-            disConnectLinear.setVisibility(View.GONE);
-        }else {
-            disConnectLinear.setVisibility(View.VISIBLE);
-        }
+        initView();
         if (MyData.boxFiles.size()==0||isLoadLocal)
         init();
     }
@@ -136,10 +149,18 @@ public class TransportFragment extends Fragment implements View.OnClickListener,
         }else if (msg.contains("connect_failed")) {
 
         }
+        initView();
+    }
+    private void initView(){
         if (MyData.isConnect){
             disConnectLinear.setVisibility(View.GONE);
         }else {
             disConnectLinear.setVisibility(View.VISIBLE);
+        }
+        if (page==1){
+            clickTvbox();
+        }else {
+            clickMobile();
         }
     }
     private void setListener() {
@@ -148,33 +169,57 @@ public class TransportFragment extends Fragment implements View.OnClickListener,
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                if (MyData.isConnect) {
-                    if (!MyData.isShowCheck) {
-                        BoxFile boxFile = MyData.boxFiles.get(position);
-                        if (boxFile.getFileType() == 1) {
-                            fileName = boxFile.getFileName();
-                            if (MyData.boxFilePath.equals("/")) {
-                                MyData.boxFilePath = MyData.boxFilePath + fileName;
+                if (page==1) {
+                    if (MyData.isConnect) {
+                        if (!MyData.isShowCheck) {
+                            BoxFile boxFile = MyData.boxFiles.get(position);
+                            if (boxFile.getFileType() == 1) {
+                                fileName = boxFile.getFileName();
+                                if (MyData.boxFilePath.equals("/")) {
+                                    MyData.boxFilePath = MyData.boxFilePath + fileName;
+                                } else {
+                                    MyData.boxFilePath = MyData.boxFilePath + "/" + fileName;
+                                }
+                                init();
                             } else {
-                                MyData.boxFilePath = MyData.boxFilePath + "/" + fileName;
+                                MyData.selectBoxFiles.clear();
+                                MyData.selectBoxFiles.add(boxFile);
+                                //showMenuDialog();
                             }
-                            init();
                         } else {
-                            MyData.selectBoxFiles.clear();
-                            MyData.selectBoxFiles.add(boxFile);
-                            //showMenuDialog();
+                            BoxFile boxFile = MyData.boxFiles.get(position);
+                            if (MyData.selectBoxFiles.contains(boxFile)) {
+                                MyData.selectBoxFiles.remove(boxFile);
+                            } else {
+                                MyData.selectBoxFiles.add(boxFile);
+                            }
+                            boxAdapter.notifyDataSetChanged();
                         }
                     } else {
-                        BoxFile boxFile = MyData.boxFiles.get(position);
-                        if (MyData.selectBoxFiles.contains(boxFile)) {
-                            MyData.selectBoxFiles.remove(boxFile);
-                        } else {
-                            MyData.selectBoxFiles.add(boxFile);
-                        }
-                        boxAdapter.notifyDataSetChanged();
+                        Toast.makeText(context, context.getString(R.string.disconnect_notice), Toast.LENGTH_SHORT).show();
                     }
                 }else {
-                    Toast.makeText(context,context.getString(R.string.disconnect_notice),Toast.LENGTH_SHORT).show();
+                    BoxFile boxFile = moFiles.get(position);
+                    if (!MyData.isShowCheck) {
+                        if (boxFile.getFileType() == 1) {
+                            moFiles.clear();
+                            MyData.fileSelect = new File(boxFile.getFilePath());
+                            synchronized (adapter) {
+                                FileFind.findFiles(moFiles, fileSelect, mHandler);
+                            }
+                            Log.i("findFiles", "moFiles.size()="+moFiles.size());
+                        } else {
+
+                        }
+                    }else {
+                        if (moSelectFiles.contains(boxFile)){
+                            moSelectFiles.remove(boxFile);
+                        }else {
+                            moSelectFiles.add(boxFile);
+                        }
+                        mHandler.sendEmptyMessage(0);
+
+                    }
                 }
             }
         });
@@ -182,7 +227,7 @@ public class TransportFragment extends Fragment implements View.OnClickListener,
             @Override
             public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
                 MyData.isShowCheck = true;
-                boxAdapter.notifyDataSetChanged();
+                mHandler.sendEmptyMessage(0);
                 return true;
             }
         });
@@ -191,36 +236,78 @@ public class TransportFragment extends Fragment implements View.OnClickListener,
 
     private void menuOnClick(View view,BoxFile boxFile) {
         Log.i("menuOnClick", "menuOnClick");
-        switch (view.getId()){
-            case R.id.item_menu_op:
-                if (openOpBoxFile!=null&&openOpBoxFile.equals(boxFile)) {
-                    if (boxFile.isOpenOp()) {
-                        boxFile.setOpenOp(false);
+        if (page==1) {
+            switch (view.getId()) {
+                case R.id.item_menu_op:
+                    if (openOpBoxFile != null && openOpBoxFile.equals(boxFile)) {
+                        if (boxFile.isOpenOp()) {
+                            boxFile.setOpenOp(false);
+                        } else {
+                            boxFile.setOpenOp(true);
+                        }
+                        openOpBoxFile = boxFile;
                     } else {
+                        if (openOpBoxFile != null) {
+                            openOpBoxFile.setOpenOp(false);
+                        }
+                        openOpBoxFile = boxFile;
                         boxFile.setOpenOp(true);
                     }
-                }else {
-                    if (openOpBoxFile!=null){
-                        openOpBoxFile.setOpenOp(false);
+                    boxAdapter.notifyDataSetChanged();
+                    break;
+                case R.id.item_trans:
+                    MyData.disPlayMode=MyData.TRANS;
+                    page = 2;
+                    initView();
+                    break;
+                case R.id.item_remove:
+                    if (page == 1 && !MyData.isConnect) {
+                        Toast.makeText(context, context.getString(R.string.disconnect_notice), Toast.LENGTH_SHORT).show();
+                        return;
                     }
-                    openOpBoxFile = boxFile;
-                    boxFile.setOpenOp(true);
-                }
-                boxAdapter.notifyDataSetChanged();
-                break;
-            case R.id.item_remove:
-                MyData.boxFiles.remove(boxFile);
-                boxAdapter.notifyDataSetChanged();
-                break;
+                    MyData.boxFiles.remove(boxFile);
+                    mHandler.sendEmptyMessage(0);
+                    break;
+            }
+        }else {
+            switch (view.getId()) {
+                case R.id.item_menu_op:
+                    if (openOpBoxFile != null && openOpBoxFile.equals(boxFile)) {
+                        if (boxFile.isOpenOp()) {
+                            boxFile.setOpenOp(false);
+                        } else {
+                            boxFile.setOpenOp(true);
+                        }
+                        openOpBoxFile = boxFile;
+                    } else {
+                        if (openOpBoxFile != null) {
+                            openOpBoxFile.setOpenOp(false);
+                        }
+                        openOpBoxFile = boxFile;
+                        boxFile.setOpenOp(true);
+                    }
+                    adapter.notifyDataSetChanged();
+                    break;
+                case R.id.item_remove:
+                    if (page == 1 && !MyData.isConnect) {
+                        Toast.makeText(context, context.getString(R.string.disconnect_notice), Toast.LENGTH_SHORT).show();
+                        return;
+                    }
+                    MyData.boxFiles.remove(boxFile);
+                    mHandler.sendEmptyMessage(0);
+                    break;
+            }
         }
     }
     @Override
     public void onClick(View view) {
         switch (view.getId()) {
             case R.id.tvbox_button:
+                page = 1;
                 clickTvbox();
                 break;
             case R.id.mobile_button:
+                page = 2;
                 clickMobile();
                 break;
 
@@ -233,7 +320,11 @@ public class TransportFragment extends Fragment implements View.OnClickListener,
         mobile.setSelected(false);
         tvbox.setTextColor(getResources().getColor(R.color.black));
         mobile.setTextColor(getResources().getColor(R.color.white));
-
+        if (MyData.boxFiles.size()==0||isLoadLocal) {
+            init();
+        }else {
+            mHandler.sendEmptyMessage(0);
+        }
     }
 
     private void clickMobile() {
@@ -241,7 +332,11 @@ public class TransportFragment extends Fragment implements View.OnClickListener,
         tvbox.setSelected(false);
         tvbox.setTextColor(getResources().getColor(R.color.white));
         mobile.setTextColor(getResources().getColor(R.color.black));
-
+        if (moFiles.size()==0||!MyData.disPlayMode.equals(MyData.NORMAL)){
+            init();
+        }else {
+            mHandler.sendEmptyMessage(0);
+        }
     }
 
     @Override
@@ -251,47 +346,48 @@ public class TransportFragment extends Fragment implements View.OnClickListener,
     }
 
     private void init() {
+        if (isIniting){
+            return;
+        }
+        isIniting = true;
         //progressBar.setVisibility(View.VISIBLE);
         if (page == 1) {
             if (MyData.isConnect) {
                 final String comment = changeToUnicode(MyData.boxFilePath);
                 isLoadLocal = false;
                 MyData.boxFiles.clear();
-                boxAdapter.notifyDataSetChanged();
-                new Thread() {
+                RequestUtil.requestWithComment(comment, new RequestUtil.HandleResult() {
                     @Override
-                    public void run() {
-                        try {
-                            Request request = new Request.Builder().header("comment", comment)
-                                    .url(MyData.downUrl).build();
-                            Call call = okHttpClient.newCall(request);
-                            Response response = call.execute();
-                            String result = response.body().string();
-                            Log.i("result", result);
-                            editor.putString("last_path_info", result);
-                            handResult(result);
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                        }
+                    public void resultHandle(String result) {
+                        handResult(result);
                     }
-                }.start();
+                });
             } else {
                 isLoadLocal = true;
                 boolean isDataSave = preferences.getBoolean("data_save_boxfile", false);
                 if (isDataSave) {
-                    List<BoxFile> files = DataSupport.findAll(BoxFile.class);
-                    MyData.boxFiles.clear();
-                    MyData.boxFiles.addAll(files);
-                    ListSort.sort(MyData.boxFiles);
-                    boxAdapter.notifyDataSetChanged();
+                    synchronized (boxAdapter) {
+                        List<BoxFile> files = DataSupport.findAll(BoxFile.class);
+                        MyData.boxFiles.clear();
+                        MyData.boxFiles.addAll(files);
+                        ListSort.sort(MyData.boxFiles);
+                        mHandler.sendEmptyMessage(0);
+                    }
+
+                }else {
+                    String info = getString(R.string.def_path_info);
+                    handResult(info);
                 }
 
             }
         }else {
-            FileFind.findFiles(moFiles,MyData.fileSelect);
-            adapter = new FileAdapter(context,R.layout.file_list_item,moFiles,moSelectFiles);
-            listView.setAdapter(adapter);
+            synchronized (adapter) {
+                FileFind.findFiles(moFiles, MyData.fileSelect, mHandler);
+            }
+            Log.i("findFiles", "moFiles.size()="+moFiles.size());
+
         }
+        isIniting = false;
     }
 
     private void delete() {
@@ -452,23 +548,29 @@ public class TransportFragment extends Fragment implements View.OnClickListener,
         }else {
             firstPath = false;
         }
-        String[] files = result.split("\"type=\"");
-        MyData.boxFilePath = files[0];
-        for (int i = 1; i < files.length; i++) {
-            String[] fils = files[i].split("\"name=\"");
-            int type = Integer.parseInt(fils[0]);
-            String[] fis = fils[1].split("\"size=\"");
-            String[] fi = fis[1].split("\"time=\"");
-            BoxFile boxFile = new BoxFile(type, fis[0], fi[1],fi[0], MyData.boxFilePath + "/" + fis[0]);
-            if (firstPath) {
-                boxFile.save();
-                editor.putBoolean("data_save_boxfile", true);
-                editor.apply();
+        synchronized (boxAdapter) {
+            MyData.boxFiles.clear();
+            String[] files = result.split("\"type=\"");
+            MyData.boxFilePath = files[0];
+            for (int i = 1; i < files.length; i++) {
+                String[] fils = files[i].split("\"name=\"");
+                int type = Integer.parseInt(fils[0]);
+                String[] fis = fils[1].split("\"size=\"");
+                String[] fi = fis[1].split("\"time=\"");
+                BoxFile boxFile = new BoxFile(type, fis[0], fi[1], fi[0], MyData.boxFilePath + "/" + fis[0]);
+                if (firstPath) {
+                    boxFile.save();
+                    editor.putBoolean("data_save_boxfile", true);
+                    editor.apply();
+                }
+                if (type==1||MyData.disPlayMode.equals(MyData.NORMAL)) {
+                    MyData.boxFiles.add(boxFile);
+                }
             }
-            MyData.boxFiles.add(boxFile);
+            ListSort.sort(MyData.boxFiles);
+            mHandler.sendEmptyMessage(0);
         }
-        ListSort.sort(MyData.boxFiles);
-        mHandler.sendEmptyMessage(0);
+
     }
 
     private void showProgressDialog() {
@@ -778,11 +880,17 @@ public class TransportFragment extends Fragment implements View.OnClickListener,
             switch (msg.what){
                 case 0:
 //                    filePath.setText(MyData.boxFilePath);
-                    boxAdapter.notifyDataSetChanged();
-                    progressBar.setVisibility(View.GONE);
-                    if (MyData.boxFiles.size()==0){
+                    if (page==1) {
+                        listView.setAdapter(boxAdapter);
+                        pathTextView.setText(MyData.boxFilePath);
+                        progressBar.setVisibility(View.GONE);
+                        if (MyData.boxFiles.size() == 0) {
 //                        menuRel.setVisibility(View.GONE);
-                        MyData.isShowCheck = false;
+                            MyData.isShowCheck = false;
+                        }
+                    }else {
+                        pathTextView.setText(MyData.fileSelect.getPath());
+                        listView.setAdapter(adapter);
                     }
                     break;
                 case 1:
@@ -832,27 +940,48 @@ public class TransportFragment extends Fragment implements View.OnClickListener,
 //        }
 //    }
     public boolean fragmentBack(){
-        if (MyData.isConnect) {
-            if (!MyData.isShowCheck) {
-                if (MyData.boxFilePath.equals(File.separator) || MyData.boxFilePath.equals("")) {
-                    return false;
-                }
-                Log.i("MyData.boxFilePath", MyData.boxFilePath);
-                if (MyData.boxFilePath.lastIndexOf(File.separator) == 0) {
-                    MyData.boxFilePath = File.separator;
+        if (page==1) {
+            if (MyData.isConnect) {
+                if (!MyData.isShowCheck) {
+                    if (MyData.boxFilePath.equals(File.separator) || MyData.boxFilePath.equals("")) {
+                        return false;
+                    }
+                    Log.i("MyData.boxFilePath", MyData.boxFilePath);
+                    if (MyData.boxFilePath.lastIndexOf(File.separator) == 0) {
+                        MyData.boxFilePath = File.separator;
+                    } else {
+                        MyData.boxFilePath = MyData.boxFilePath.substring(0, MyData.boxFilePath.lastIndexOf(File.separator));
+                    }
+                    init();
+                    return true;
                 } else {
-                    MyData.boxFilePath = MyData.boxFilePath.substring(0, MyData.boxFilePath.lastIndexOf(File.separator));
+                    MyData.isShowCheck = false;
+                    MyData.selectBoxFiles.clear();
+                    boxAdapter.notifyDataSetChanged();
+                    return true;
                 }
-                init();
-                return true;
             } else {
-                MyData.isShowCheck = false;
-                MyData.selectBoxFiles.clear();
-                adapter.notifyDataSetChanged();
-                return true;
+                return false;
             }
         }else {
-            return false;
+            if (!MyData.isShowCheck) {
+                if (MyData.fileSelect.equals(Environment.getExternalStorageDirectory())) {
+                    return false;
+                } else {
+                    moFiles.clear();
+                    MyData.fileSelect = MyData.fileSelect.getParentFile();
+                    pathTextView.setText(MyData.fileSelect.getPath());
+                    synchronized (adapter) {
+                        FileFind.findFiles(moFiles, fileSelect, mHandler);
+                    }
+                    Log.i("findFiles", "moFiles.size()="+moFiles.size());
+                }
+            }else {
+                MyData.isShowCheck = false;
+                moSelectFiles.clear();
+                mHandler.sendEmptyMessage(0);
+            }
+            return true;
         }
     }
 }

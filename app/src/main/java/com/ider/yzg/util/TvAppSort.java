@@ -28,13 +28,13 @@ public class TvAppSort implements Comparator<TvApp> {
         }else if (value>0){
             return -1;
         }else {
-            int value2 = collator.compare(tvApp1.getLabel(),tvApp2.getType());
-            if (value>0){
+            int value2 = collator.compare(tvApp1.getPackageName(),tvApp2.getPackageName());
+            if (value2>0){
                 return 1;
-            }else if (value<0){
+            }else if (value2<0){
                 return -1;
             }
-            return value2;
+            return 1;
         }
     }
 }

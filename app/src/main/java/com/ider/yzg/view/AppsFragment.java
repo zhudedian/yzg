@@ -38,6 +38,7 @@ import com.ider.yzg.popu.Popus;
 import com.ider.yzg.util.ApkUtil;
 import com.ider.yzg.util.FileUtil;
 import com.ider.yzg.util.FragmentInter;
+import com.ider.yzg.util.RequestUtil;
 import com.ider.yzg.util.TvAppSort;
 
 import org.apache.http.client.HttpClient;
@@ -117,18 +118,42 @@ public class AppsFragment extends Fragment implements View.OnClickListener,Fragm
         context = getContext();
         initData();
         setListener();
-        local.performClick();
+        if (appsAdapter==null) {
+            appsAdapter = new AppsAdapter(context, R.layout.apk_list_item, apps);
+            appsAdapter.setOnApkInstallClickListener(new AppsAdapter.OnApkInstallClickListener() {
+                @Override
+                public void installClick(TvApp tvApp) {
+                    if (MyData.isConnect) {
+                        if (tvApp.getType().equals("1")) {
+                            String packageName = tvApp.getPackageName();
+                            Log.i(TAG, tvApp.getPackageName());
+                            final String comment = changeToUnicode("\"uninstall=\"" +packageName);
+                            RequestUtil.requestWithComment(comment, new RequestUtil.HandleResult() {
+                                @Override
+                                public void resultHandle(String result) {
+
+                                }
+                            });
+                            showUninstallDialog(tvApp);
+                        }else {
+                            Toast.makeText(context,context.getString(R.string.system_app_uninstall_notice),Toast.LENGTH_SHORT).show();
+                        }
+                    }else {
+                        Toast.makeText(context,context.getString(R.string.disconnect_notice2),Toast.LENGTH_SHORT).show();
+                    }
+                }
+            });
+            local.performClick();
+        }
+
         if (apps==null||apps.size()==0||isLoadLocal)
         initTvState();
+        initView();
     }
     @Override
     public void fragmentInit() {
         Log.i("fragmentInit",localApps.size()+"");
-        if (MyData.isConnect){
-            disConnectLinear.setVisibility(View.GONE);
-        }else {
-            disConnectLinear.setVisibility(View.VISIBLE);
-        }
+        initView();
         if (page == 1){
             recommend.performClick();
         }else if (page == 2){
@@ -144,20 +169,28 @@ public class AppsFragment extends Fragment implements View.OnClickListener,Fragm
         }
 
     }
-    @Override
-    public  void fragmentHandleMsg(String msg){
-        if (msg.contains("connect_success")) {
-            initTvState();
-        }else if (msg.contains("connect_failed")) {
-            isTvAppOk = false;
-        }else if (msg.contains("InUnCp")) {
-            initTvApp();
-        }
+    private void initView(){
         if (MyData.isConnect){
             disConnectLinear.setVisibility(View.GONE);
         }else {
             disConnectLinear.setVisibility(View.VISIBLE);
         }
+        if (page==2){
+            clickLocal();
+        }else {
+            clickUninstall();
+        }
+    }
+    @Override
+    public  void fragmentHandleMsg(String msg){
+        if (msg.contains("connect_success")) {
+            initTvState();
+        }else if (msg.contains("connect_failed")) {
+
+        }else if (msg.contains("InUnCp")) {
+            initTvApp();
+        }
+        initView();
     }
 
     private void initData(){
@@ -188,9 +221,11 @@ public class AppsFragment extends Fragment implements View.OnClickListener,Fragm
                 clickRecommend();
                 break;
             case R.id.local_button:
+                page = 2;
                 clickLocal();
                 break;
             case R.id.uninstall_button:
+                page = 3;
                 clickUninstall();
                 break;
         }
@@ -211,9 +246,8 @@ public class AppsFragment extends Fragment implements View.OnClickListener,Fragm
         local.setTextColor(getResources().getColor(R.color.black));
         recommend.setTextColor(getResources().getColor(R.color.white));
         uninstall.setTextColor(getResources().getColor(R.color.white));
-        page = 2;
         if (adapter!=null&&localApps.size()>0&&!isLoadLocal){
-            listView.setAdapter(adapter);
+            mHandler.sendEmptyMessage(0);
             if (localApps.size()==0){
                 progressBar.setVisibility(View.VISIBLE);
             }else {
@@ -230,9 +264,8 @@ public class AppsFragment extends Fragment implements View.OnClickListener,Fragm
         recommend.setTextColor(getResources().getColor(R.color.white));
         local.setTextColor(getResources().getColor(R.color.white));
         uninstall.setTextColor(getResources().getColor(R.color.black));
-        page = 3;
         if (appsAdapter!=null&&apps.size()>0&&!isLoadLocal){
-            listView.setAdapter(appsAdapter);
+            mHandler.sendEmptyMessage(0);
             if (apps.size()==0){
                 progressBar.setVisibility(View.VISIBLE);
             }else {
@@ -243,79 +276,34 @@ public class AppsFragment extends Fragment implements View.OnClickListener,Fragm
         }
     }
     private void initTvState(){
-        if (appsAdapter==null) {
-            appsAdapter = new AppsAdapter(context, R.layout.apk_list_item, apps);
-            appsAdapter.setOnApkInstallClickListener(new AppsAdapter.OnApkInstallClickListener() {
-                @Override
-                public void installClick(TvApp tvApp) {
-                    if (MyData.isConnect) {
-                        if (tvApp.getType().equals("1")) {
-                            String packageName = tvApp.getPackageName();
-                            Log.i(TAG, tvApp.getPackageName());
-                            final String comment = changeToUnicode(packageName);
-                            new Thread() {
-                                @Override
-                                public void run() {
-                                    try {
-                                        Request request = new Request.Builder().header("comment", "\"uninstall=\"" + comment)
-                                                .url(MyData.downUrl).build();
-                                        Call call = okHttpClient.newCall(request);
-                                        Response response = call.execute();
-                                        final String result = response.body().string();
-                                        Log.i("result", result);
-                                        if (!result.equals("")) {
-                                            getActivity().runOnUiThread(new Runnable() {
-                                                @Override
-                                                public void run() {
-                                                    Toast.makeText(context, result, Toast.LENGTH_SHORT).show();
-                                                }
-                                            });
-                                        }
-                                    } catch (Exception e) {
-                                        e.printStackTrace();
-                                    }
-                                }
-                            }.start();
-                            showUninstallDialog(tvApp);
-                        }else {
-                            Toast.makeText(context,context.getString(R.string.system_app_uninstall_notice),Toast.LENGTH_SHORT).show();
-                        }
-                    }else {
-                        Toast.makeText(context,context.getString(R.string.disconnect_notice2),Toast.LENGTH_SHORT).show();
-                    }
-                }
-            });
-        }
+
         if (MyData.isConnect) {
             isLoadLocal = false;
             final String comment = changeToUnicode("\"RequestAllApps\"");
 
-            new Thread() {
+            RequestUtil.requestWithComment(comment, new RequestUtil.HandleResult() {
                 @Override
-                public void run() {
-                    try {
-                        Request request = new Request.Builder().header("comment", comment)
-                                .url(MyData.downUrl).build();
-                        Call call = okHttpClient.newCall(request);
-                        Response response = call.execute();
-                        String result = response.body().string();
-                        Log.i("result", result);
-                        handResult(result);
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
+                public void resultHandle(String result) {
+                    handResult(result);
                 }
-            }.start();
+            });
         }else {
             isLoadLocal = true;
             boolean isDataSave = preferences.getBoolean("data_save_tvapp", false);
             if (isDataSave) {
-                List<TvApp> tvApps = DataSupport.findAll(TvApp.class);
-                apps.clear();
-                apps.addAll(tvApps);
-                TvAppSort.sort(apps);
+                synchronized (appsAdapter) {
+                    List<TvApp> tvApps = DataSupport.findAll(TvApp.class);
+                    apps.clear();
+                    apps.addAll(tvApps);
+                    TvAppSort.sort(apps);
+                    isTvAppOk = true;
+                    mHandler.sendEmptyMessage(1);
+                    mHandler.sendEmptyMessage(0);
+                }
+            }else {
+                String info = getString(R.string.def_tvapp_info);
+                handResult(info);
             }
-            mHandler.sendEmptyMessage(0);
         }
     }
     private void initTvApp(){
@@ -486,7 +474,7 @@ public class AppsFragment extends Fragment implements View.OnClickListener,Fragm
             return;
         }
         boolean isDataSave = preferences.getBoolean("data_save_tvapp", false);
-        synchronized (apps) {
+        synchronized (appsAdapter) {
             String[] files = result.split("\"type=\"");
             picDownPath = files[0];
             apps.clear();

@@ -74,8 +74,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         viewpager.setOnPageChangeListener(new ViewPager.OnPageChangeListener() {
             @Override
             public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
-                //Log.i(TAG,"positionOffset="+positionOffset+"positionOffsetPixels="+positionOffsetPixels);
-                if (positionOffsetPixels == 0) {
+                Log.i(TAG,"positionOffset="+positionOffset+"positionOffsetPixels="+positionOffsetPixels);
+                if (positionOffsetPixels == 0&&positionOffset==0) {
                     setDate(position);
                     if (position == 1 && remoteFragment.page == 2) {
                         viewpager.setScanScroll(false);
@@ -150,13 +150,18 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 currentItem = 1;
                 break;
             case 2:
-                fragmentInter = transportFragment;
-                fragmentInter.fragmentInit();
-                apps.setSelect(false);
-                remote.setSelect(false);
-                transmitter.setSelect(true);
-                tool.setSelect(false);
-                currentItem = 2;
+                if (ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.READ_EXTERNAL_STORAGE)!= PackageManager.PERMISSION_GRANTED){
+                    ActivityCompat.requestPermissions(MainActivity.this,new String[]{Manifest.permission.READ_EXTERNAL_STORAGE},2);
+                }else {
+                    fragmentInter = transportFragment;
+                    fragmentInter.fragmentInit();
+                    apps.setSelect(false);
+                    remote.setSelect(false);
+                    transmitter.setSelect(true);
+                    tool.setSelect(false);
+                    currentItem = 2;
+                }
+
                 break;
             case 3:
                 apps.setSelect(false);
@@ -235,10 +240,20 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 }
                 break;
             case 2:
+                if (grantResults.length>0&& grantResults[0] ==PackageManager.PERMISSION_GRANTED){
+                    fragmentInter = transportFragment;
+                    fragmentInter.fragmentInit();
+                    apps.setSelect(false);
+                    remote.setSelect(false);
+                    transmitter.setSelect(true);
+                    tool.setSelect(false);
+                    currentItem = 2;
+                }else {
+                    Toast.makeText(this,"You denied the permission",Toast.LENGTH_SHORT).show();
+                }
 
                 break;
             case 3:
-
                 break;
 
             default:
