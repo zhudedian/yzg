@@ -38,9 +38,10 @@ public class MyData {
     public static String screenshotSavePath;
     public static SocketClient client;
     public static boolean isRequesting;
-    public static String disPlayMode = "trans";
+    public static String disPlayMode = "normal";
 
     public final static String NORMAL = "normal";
     public final static String TRANS = "trans";
+    public final static String SELECT = "select";
 
 }

@@ -78,10 +78,31 @@ public class ItemOpMenu extends LinearLayout {
                 image.setImageResource(R.drawable.ic_copy_unselect);
             }
             text.setText(R.string.item_copy);
+        }else if (getTag().equals("6")){
+            if (isSelect){
+                text.setTextColor(getResources().getColor(R.color.item_menu_select));
+                image.setImageResource(R.drawable.ic_allcheck_select);
+            }else {
+                text.setTextColor(getResources().getColor(R.color.item_menu_unselect));
+                image.setImageResource(R.drawable.ic_allcheck_unselect);
+            }
+            text.setText(R.string.item_allcheck);
+        }else if (getTag().equals("7")){
+            text.setTextColor(getResources().getColor(R.color.item_menu_select));
+            image.setImageResource(R.drawable.ic_cancel);
+            text.setText(R.string.item_cancel);
+        }else if (getTag().equals("8")){
+            text.setTextColor(getResources().getColor(R.color.item_menu_select));
+            image.setImageResource(R.drawable.ic_new_create);
+            text.setText(R.string.item_new_create);
         }
+
     }
     public void setSelect(boolean isSelect){
         this.isSelect = isSelect;
         freshView();
+    }
+    public boolean isSelect(){
+        return isSelect;
     }
 }

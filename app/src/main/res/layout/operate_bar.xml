@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="horizontal"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#ffffff">
+    <com.ider.yzg.view.ItemOpMenu
+        android:id="@+id/item_allcheck"
+        style="@style/OperateBarOpItemStyle"
+        android:tag="6"/>
+    <com.ider.yzg.view.ItemOpMenu
+        android:id="@+id/item_new_create"
+        style="@style/OperateBarOpItemStyle"
+        android:tag="8"/>
+    <com.ider.yzg.view.ItemOpMenu
+        android:id="@+id/item_trans"
+        style="@style/OperateBarOpItemStyle"
+        android:tag="1"/>
+    <com.ider.yzg.view.ItemOpMenu
+        android:id="@+id/item_move"
+        style="@style/OperateBarOpItemStyle"
+        android:tag="2"/>
+    <com.ider.yzg.view.ItemOpMenu
+        android:id="@+id/item_rename"
+        style="@style/OperateBarOpItemStyle"
+        android:tag="3"/>
+    <com.ider.yzg.view.ItemOpMenu
+        android:id="@+id/item_remove"
+        style="@style/OperateBarOpItemStyle"
+        android:tag="4"/>
+    <com.ider.yzg.view.ItemOpMenu
+        android:id="@+id/item_copy"
+        style="@style/OperateBarOpItemStyle"
+        android:tag="5"/>
+    <com.ider.yzg.view.ItemOpMenu
+        android:id="@+id/item_cancel"
+        style="@style/OperateBarOpItemStyle"
+        android:tag="7"/>
+
+</LinearLayout>

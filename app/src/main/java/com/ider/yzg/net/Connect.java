@@ -66,7 +66,7 @@ public class Connect {
         }
     }
     private static void onBrodacastReceiver() {
-        Log.i("receiver","onBrodacastReceiver");
+        //Log.i("receiver","onBrodacastReceiver");
         new Thread(new Runnable() {
             @Override
             public void run() {

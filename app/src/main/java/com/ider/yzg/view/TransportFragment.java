@@ -57,6 +57,7 @@ import okhttp3.Response;
 
 import static android.R.attr.breadCrumbShortTitle;
 import static android.R.attr.id;
+import static android.os.Build.VERSION_CODES.M;
 import static com.ider.yzg.R.id.apps;
 import static com.ider.yzg.db.MyData.fileSelect;
 import static com.ider.yzg.util.SocketClient.mHandler;
@@ -71,6 +72,7 @@ public class TransportFragment extends Fragment implements View.OnClickListener,
     private SharedPreferences preferences;
     private SharedPreferences.Editor editor;
 
+    private OperateBar operateBar;
     private TextView tvbox, mobile;
     private LinearLayout disConnectLinear,pathLinearView;
     private TextView pathTextView;
@@ -94,6 +96,7 @@ public class TransportFragment extends Fragment implements View.OnClickListener,
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_transport, container, false);
+        operateBar = (OperateBar)view.findViewById(R.id.operate_bar);
         disConnectLinear = (LinearLayout)view.findViewById(R.id.notice_linear_layout);
         pathLinearView = (LinearLayout)view.findViewById(R.id.path_linear_view);
         pathTextView = (TextView)view.findViewById(R.id.path_text_view);
@@ -162,6 +165,11 @@ public class TransportFragment extends Fragment implements View.OnClickListener,
         }else {
             clickMobile();
         }
+        if (MyData.disPlayMode.equals(MyData.NORMAL)){
+            operateBar.setVisibility(View.GONE);
+        }else {
+            operateBar.setVisibility(View.VISIBLE);
+        }
     }
     private void setListener() {
         tvbox.setOnClickListener(this);
@@ -170,8 +178,8 @@ public class TransportFragment extends Fragment implements View.OnClickListener,
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 if (page==1) {
-                    if (MyData.isConnect) {
-                        if (!MyData.isShowCheck) {
+                    if (!MyData.isShowCheck) {
+                        if (MyData.isConnect) {
                             BoxFile boxFile = MyData.boxFiles.get(position);
                             if (boxFile.getFileType() == 1) {
                                 fileName = boxFile.getFileName();
@@ -186,17 +194,24 @@ public class TransportFragment extends Fragment implements View.OnClickListener,
                                 MyData.selectBoxFiles.add(boxFile);
                                 //showMenuDialog();
                             }
-                        } else {
-                            BoxFile boxFile = MyData.boxFiles.get(position);
-                            if (MyData.selectBoxFiles.contains(boxFile)) {
-                                MyData.selectBoxFiles.remove(boxFile);
-                            } else {
-                                MyData.selectBoxFiles.add(boxFile);
-                            }
-                            boxAdapter.notifyDataSetChanged();
+                        }else {
+                            Toast.makeText(context, context.getString(R.string.disconnect_notice), Toast.LENGTH_SHORT).show();
                         }
                     } else {
-                        Toast.makeText(context, context.getString(R.string.disconnect_notice), Toast.LENGTH_SHORT).show();
+                        BoxFile boxFile = MyData.boxFiles.get(position);
+                        if (MyData.selectBoxFiles.contains(boxFile)) {
+                            MyData.selectBoxFiles.remove(boxFile);
+                        } else {
+                            MyData.selectBoxFiles.add(boxFile);
+                        }
+                        if (MyData.selectBoxFiles.size()==0){
+                            operateBar.showNoCheckMenu();
+                        }else if (MyData.selectBoxFiles.size()==1){
+                            operateBar.showOneCheckMenu();
+                        }else {
+                            operateBar.showMoreCheckMenu();
+                        }
+                        boxAdapter.notifyDataSetChanged();
                     }
                 }else {
                     BoxFile boxFile = moFiles.get(position);
@@ -217,8 +232,14 @@ public class TransportFragment extends Fragment implements View.OnClickListener,
                         }else {
                             moSelectFiles.add(boxFile);
                         }
-                        mHandler.sendEmptyMessage(0);
-
+                        if (moSelectFiles.size()==0){
+                            operateBar.showNoCheckMenu();
+                        }else if (moSelectFiles.size()==1){
+                            operateBar.showOneCheckMenu();
+                        }else {
+                            operateBar.showMoreCheckMenu();
+                        }
+                        adapter.notifyDataSetChanged();
                     }
                 }
             }
@@ -227,8 +248,29 @@ public class TransportFragment extends Fragment implements View.OnClickListener,
             @Override
             public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
                 MyData.isShowCheck = true;
-                mHandler.sendEmptyMessage(0);
+                operateBar.setVisibility(View.VISIBLE);
+                operateBar.showNoCheckMenu();
+                if (page==1){
+                    boxAdapter.notifyDataSetChanged();
+                }else {
+                    adapter.notifyDataSetChanged();
+                }
                 return true;
+            }
+        });
+        operateBar.setListener(new OperateBar.OnMenuClickListener() {
+            @Override
+            public void onMenuClick(boolean isAllCheck, boolean isCopy, boolean isRename, boolean isRemove,
+                                    boolean isMove, boolean isTrans, boolean isNewCreate, boolean isCancel) {
+                Log.i("menuOnClick", isAllCheck+","+isCopy+","+isRename+","+isRemove+","+isMove+","+isTrans+","+isNewCreate+","+isCancel);
+                if (isRemove){
+                    new ConfirmPopu(context, "确认删除", "uiuiui", "确认", "取消", true, new ConfirmPopu.OnOkListener() {
+                        @Override
+                        public void onOkClick(boolean isOk, boolean isAllCheck) {
+                            Log.i("menuOnClick","onOkClick");
+                        }
+                    }).show(listView);
+                }
             }
         });
 
@@ -259,6 +301,7 @@ public class TransportFragment extends Fragment implements View.OnClickListener,
                     MyData.disPlayMode=MyData.TRANS;
                     page = 2;
                     initView();
+                    operateBar.showTransMenu();
                     break;
                 case R.id.item_remove:
                     if (page == 1 && !MyData.isConnect) {
@@ -325,6 +368,10 @@ public class TransportFragment extends Fragment implements View.OnClickListener,
         }else {
             mHandler.sendEmptyMessage(0);
         }
+        if (MyData.isShowCheck){
+            MyData.isShowCheck = false;
+            operateBar.setVisibility(View.GONE);
+        }
     }
 
     private void clickMobile() {
@@ -336,6 +383,10 @@ public class TransportFragment extends Fragment implements View.OnClickListener,
             init();
         }else {
             mHandler.sendEmptyMessage(0);
+        }
+        if (MyData.isShowCheck){
+            MyData.isShowCheck = false;
+            operateBar.setVisibility(View.GONE);
         }
     }
 
@@ -568,8 +619,8 @@ public class TransportFragment extends Fragment implements View.OnClickListener,
                 }
             }
             ListSort.sort(MyData.boxFiles);
-            mHandler.sendEmptyMessage(0);
         }
+        mHandler.sendEmptyMessage(0);
 
     }
 
@@ -941,9 +992,15 @@ public class TransportFragment extends Fragment implements View.OnClickListener,
 //    }
     public boolean fragmentBack(){
         if (page==1) {
-            if (MyData.isConnect) {
-                if (!MyData.isShowCheck) {
+            if (!MyData.isShowCheck) {
+                if (MyData.isConnect) {
                     if (MyData.boxFilePath.equals(File.separator) || MyData.boxFilePath.equals("")) {
+                        if (!MyData.disPlayMode.equals(MyData.NORMAL)) {
+                            MyData.disPlayMode = MyData.NORMAL;
+                            page = 2;
+                            initView();
+                            return true;
+                        }
                         return false;
                     }
                     Log.i("MyData.boxFilePath", MyData.boxFilePath);
@@ -954,18 +1011,32 @@ public class TransportFragment extends Fragment implements View.OnClickListener,
                     }
                     init();
                     return true;
-                } else {
-                    MyData.isShowCheck = false;
-                    MyData.selectBoxFiles.clear();
-                    boxAdapter.notifyDataSetChanged();
-                    return true;
+                }else {
+                    if (!MyData.disPlayMode.equals(MyData.NORMAL)) {
+                        MyData.disPlayMode = MyData.NORMAL;
+                        page = 2;
+                        initView();
+                        return true;
+                    }
+                    return false;
                 }
             } else {
-                return false;
+                MyData.isShowCheck = false;
+                operateBar.setVisibility(View.GONE);
+                MyData.selectBoxFiles.clear();
+                boxAdapter.notifyDataSetChanged();
+                return true;
             }
         }else {
+
             if (!MyData.isShowCheck) {
                 if (MyData.fileSelect.equals(Environment.getExternalStorageDirectory())) {
+                    if (!MyData.disPlayMode.equals(MyData.NORMAL)){
+                        MyData.disPlayMode = MyData.NORMAL;
+                        page = 1;
+                        initView();
+                        return true;
+                    }
                     return false;
                 } else {
                     moFiles.clear();
@@ -978,8 +1049,9 @@ public class TransportFragment extends Fragment implements View.OnClickListener,
                 }
             }else {
                 MyData.isShowCheck = false;
+                operateBar.setVisibility(View.GONE);
                 moSelectFiles.clear();
-                mHandler.sendEmptyMessage(0);
+                adapter.notifyDataSetChanged();
             }
             return true;
         }

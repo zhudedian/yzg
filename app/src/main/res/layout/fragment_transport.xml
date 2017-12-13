@@ -102,6 +102,11 @@
             android:dividerHeight="1dp"
             />
 
+        <com.ider.yzg.view.OperateBar
+            android:id="@+id/operate_bar"
+            android:layout_width="match_parent"
+            android:layout_height="40dp"
+            android:visibility="gone"/>
 
 
     </LinearLayout>

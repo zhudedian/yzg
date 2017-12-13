@@ -35,6 +35,9 @@
     <string name="item_rename">重命名</string>
     <string name="item_remove">删除</string>
     <string name="item_copy">复制</string>
+    <string name="item_allcheck">全选</string>
+    <string name="item_cancel">取消</string>
+    <string name="item_new_create">新建</string>
 
     <string name="def_path_info">/storage/emulated/0\"type=\"1\"name=\"Music\"size=\"4.12G\"type=\"1\"name=\"Ringtones\"size=\"4.12G
         \"type=\"1\"name=\"Alarms\"size=\"4.12G\"type=\"1\"name=\"Movies\"size=\"4.12G\"type=\"1\"name=\"Download\"size=\"4.12G
