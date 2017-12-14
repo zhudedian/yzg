@@ -45,6 +45,7 @@ public class RequestUtil {
                     }
                 } catch (Exception e) {
                     e.printStackTrace();
+                    handleResult.resultHandle("exception");
                 }
             }
         }.start();

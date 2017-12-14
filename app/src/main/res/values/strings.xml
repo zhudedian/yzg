@@ -39,6 +39,11 @@
     <string name="item_cancel">取消</string>
     <string name="item_new_create">新建</string>
 
+    <string name="popup_remove_title">确认删除?</string>
+    <string name="popup_ok_button">确定</string>
+    <string name="popup_cancel_button">取消</string>
+    <string name="popup_more_select_notice">已选中%1$d个文件（夹）</string>
+
     <string name="def_path_info">/storage/emulated/0\"type=\"1\"name=\"Music\"size=\"4.12G\"type=\"1\"name=\"Ringtones\"size=\"4.12G
         \"type=\"1\"name=\"Alarms\"size=\"4.12G\"type=\"1\"name=\"Movies\"size=\"4.12G\"type=\"1\"name=\"Download\"size=\"4.12G
         \"type=\"1\"name=\"DCIM\"size=\"4.12G\"type=\"1\"name=\"Android\"size=\"4.12G\"type=\"1\"name=\"tencent\"size=\"4.12G

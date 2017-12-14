@@ -42,7 +42,14 @@ public class BoxFile extends DataSupport {
         this.fileSize = size;
         this.filePath = filePath;
     }
-
+    public BoxFile(int types,String fileName,String createTime,String size,String filePath,String savePath){
+        this.fileTypes = types;
+        this.fileName = fileName;
+        this.createTime = createTime;
+        this.fileSize = size;
+        this.filePath = filePath;
+        this.savePath = savePath;
+    }
     public void setFileName(String name){
         this.fileName = name;
     }
