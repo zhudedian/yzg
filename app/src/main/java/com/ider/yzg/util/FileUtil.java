@@ -141,55 +141,41 @@ public class FileUtil {
     }
     public static String getSize(File file){
         if (file.isDirectory()){
-            double size = file.getTotalSpace();
-            if (size<1024){
-                return size+"Byte";
-            }else if (size<1024*1024){
-                int si = (int) (size/1024*100);
-                double s = si;
-                return s/100+"K";
-            }else if (size<1024*1024*1024){
-                int si = (int) (size/1024/1024*100);
-                double s = si;
-                return s/100+"M";
-            }else if (size/1024<1024*1024*1024){
-                int si = (int) (size/1024/1024/1024*100);
-                double s = si;
-                return s/100+"G";
-            }else {
-                int si = (int) (size/1024/1024/1024/1024*100);
-                double s = si;
-                return s/100+"T";
-            }
+            long size = file.getTotalSpace();
+            return getSize(size);
         }else {
             try {
                 FileInputStream fileInputStream = new FileInputStream(file);
-                double size = fileInputStream.available();
-                if (size<1024){
-                    return size+"Byte";
-                }else if (size<1024*1024){
-                    int si = (int) (size/1024*100);
-                    double s = si;
-                    return s/100+"K";
-                }else if (size<1024*1024*1024){
-                    int si = (int) (size/1024/1024*100);
-                    double s = si;
-                    return s/100+"M";
-                }else if (size/1024<1024*1024*1024){
-                    int si = (int) (size/1024/1024/1024*100);
-                    double s = si;
-                    return s/100+"G";
-                }else {
-                    int si = (int) (size/1024/1024/1024/1024*100);
-                    double s = si;
-                    return s/100+"T";
-                }
+                long size = fileInputStream.available();
+                return getSize(size);
             } catch (Exception e) {
 				e.printStackTrace();
                 return "0B";
             }
         }
-
-
+    }
+    public static String getSize(float size){
+        return getSize((long)size);
+    }
+    public static String getSize(long size){
+        if (size<1024){
+            return size+"B";
+        }else if (size<1024*1024){
+            int si = (int) (size/1024*100);
+            double s = si;
+            return s/100+"K";
+        }else if (size<1024*1024*1024){
+            int si = (int) (size/1024/1024*100);
+            double s = si;
+            return s/100+"M";
+        }else if (size/1024<1024*1024*1024){
+            int si = (int) (size/1024/1024/1024*100);
+            double s = si;
+            return s/100+"G";
+        }else {
+            int si = (int) (size/1024/1024/1024/1024*100);
+            double s = si;
+            return s/100+"T";
+        }
     }
 }

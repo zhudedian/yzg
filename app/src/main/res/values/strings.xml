@@ -40,6 +40,7 @@
     <string name="item_new_create">新建</string>
 
     <string name="popup_remove_title">确认删除?</string>
+    <string name="popup_upload_title">正在上传……</string>
     <string name="popup_ok_button">确定</string>
     <string name="popup_cancel_button">取消</string>
     <string name="popup_more_select_notice">已选中%1$d个文件（夹）</string>

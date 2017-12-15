@@ -37,6 +37,7 @@ import com.ider.yzg.popu.PopuUtils;
 import com.ider.yzg.popu.PopupDialog;
 import com.ider.yzg.popu.PopupUtil;
 import com.ider.yzg.popu.Popus;
+import com.ider.yzg.popu.ProgressPopup;
 import com.ider.yzg.util.FileFind;
 import com.ider.yzg.util.FragmentInter;
 
@@ -288,10 +289,17 @@ public class TransportFragment extends Fragment implements View.OnClickListener,
                         operateBar.showTransMenu();
                     }else {
                         for (BoxFile boxFile:MyData.uploadingFiles){
-                            boxFile.setSavePath(MyData.fileSelect.getPath());
+                            boxFile.setSavePath(MyData.boxFilePath);
                         }
-                        UploadUtil.uploading(mHandler);
-                        showProgressDialog();
+                        PopupUtil.getUploadPopup(context, new ProgressPopup.OnCancelListener() {
+                            @Override
+                            public void onCancelClick() {
+                                PopupUtil.forceDismissPopup();
+                            }
+                        }).show(listView);
+
+                        UploadUtil.upload(context);
+
                     }
                 }
             }
