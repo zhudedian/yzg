@@ -71,7 +71,11 @@ public abstract class ProgressUIListener extends ProgressListener {
                                 onUIProgressChanged(numBytes, totalBytes, percent, speed);
                                 break;
                             case WHAT_FINISH:
-                                onUIProgressFinish();
+                                Bundle endData = msg.getData();
+                                if (endData == null) {
+                                    return;
+                                }
+                                onUIProgressFinish(endData.getLong(TOTAL_BYTES));
                                 break;
                             default:
                                 break;
@@ -131,14 +135,17 @@ public abstract class ProgressUIListener extends ProgressListener {
     /**
      * 进度结束
      */
-    public final void onProgressFinish() {
+    public final void onProgressFinish(long totalBytes) {
         if (Looper.myLooper() == Looper.getMainLooper()) {
-            onUIProgressFinish();
+            onUIProgressFinish(totalBytes);
             return;
         }
         ensureHandler();
         Message message = mHandler.obtainMessage();
         message.what = WHAT_FINISH;
+        Bundle data = new Bundle();
+        data.putLong(TOTAL_BYTES, totalBytes);
+        message.setData(data);
         mHandler.sendMessage(message);
     }
 
@@ -165,7 +172,7 @@ public abstract class ProgressUIListener extends ProgressListener {
     /**
      * 进度结束
      */
-    public void onUIProgressFinish() {
+    public void onUIProgressFinish(long totalBytes) {
 
     }
 }

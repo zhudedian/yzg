@@ -19,6 +19,10 @@ public class FileFind {
         if (fileList==null){
             fileList = new ArrayList<>();
         }
+        if (MyData.hideFiles==null){
+            MyData.hideFiles=new ArrayList<>();
+        }
+        MyData.hideFiles.clear();
         fileList.clear();
         File[] files = file.listFiles();
         if (files != null){
@@ -26,7 +30,7 @@ public class FileFind {
                 addFile(f,fileList);
             }
         }
-        ListSort.sort(fileList);
+        //ListSort.sort(fileList);
         handler.sendEmptyMessage(0);
     }
     private static void addFile(File f,List<BoxFile> uploadFiles){
@@ -49,6 +53,8 @@ public class FileFind {
         }else {
             if (MyData.disPlayMode.equals(MyData.NORMAL)) {
                 uploadFiles.add(new BoxFile(9, f.getName(), FileUtil.getTime(f), FileUtil.getSize(f), f.getPath()));
+            }else {
+                MyData.hideFiles.add(new BoxFile(9, f.getName(), FileUtil.getTime(f), FileUtil.getSize(f), f.getPath()));
             }
         }
     }

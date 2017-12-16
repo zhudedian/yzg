@@ -154,28 +154,40 @@ public class FileUtil {
             }
         }
     }
-    public static String getSize(float size){
-        return getSize((long)size);
+    public static long getLSize(File file){
+        if (file.isDirectory()){
+            long size = file.getTotalSpace();
+            return size;
+        }else {
+            try {
+                FileInputStream fileInputStream = new FileInputStream(file);
+                long size = fileInputStream.available();
+                return size;
+            } catch (Exception e) {
+                e.printStackTrace();
+                return 0;
+            }
+        }
     }
     public static String getSize(long size){
+        return getSize((float)size);
+    }
+    public static String getSize(float size){
         if (size<1024){
             return size+"B";
         }else if (size<1024*1024){
-            int si = (int) (size/1024*100);
-            double s = si;
-            return s/100+"K";
+            float s = size/1024;
+            return String.format("%.2f",s)+"K";
         }else if (size<1024*1024*1024){
-            int si = (int) (size/1024/1024*100);
-            double s = si;
-            return s/100+"M";
+            float s = size/1024/1024;
+            return String.format("%.2f",s)+"M";
         }else if (size/1024<1024*1024*1024){
-            int si = (int) (size/1024/1024/1024*100);
-            double s = si;
-            return s/100+"G";
+
+            float s = size/1024/1024/1024;
+            return String.format("%.2f",s)+"G";
         }else {
-            int si = (int) (size/1024/1024/1024/1024*100);
-            double s = si;
-            return s/100+"T";
+            float s = size/1024/1024/1024/1024;
+            return String.format("%.2f",s)+"T";
         }
     }
 }

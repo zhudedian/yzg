@@ -2,6 +2,7 @@ package com.ider.yzg.util;
 
 import android.content.Context;
 import android.os.Handler;
+import android.os.Message;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -20,6 +21,7 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 import okhttp3.Call;
 import okhttp3.Callback;
@@ -39,47 +41,39 @@ import static android.R.id.navigationBarBackground;
 
 public class UploadUtil {
 
+    private static OkHttpClient okHttpClient;
+    private static Call call;
+    private static OnCompleteListener listener;
     private static final String TAG = "uploadFile";
     private static final int TIME_OUT = 60*1000;   //超时时间
     private static final String CHARSET = "utf-8"; //设置编码
-    public static boolean isStart;
+    private static boolean isStart;
+    private static boolean isCanceled;
 
-    public static void uploading(final Handler mHandler){
-            new Thread() {
-                @Override
-                public void run() {
-                    MyData.uploadingFiles = FindUtil.findNoDirUploadBoxFile(MyData.uploadingFiles);
-                    while (MyData.uploadingFiles.size() > 0) {
-                        BoxFile boxFile = MyData.uploadingFiles.get(0);
-                        File file = new File(boxFile.getFilePath());
-                        Log.i("boxFile.getFilePath()", boxFile.getFilePath());
-                        int result = uploadFile(file, MyData.uploadUrl, boxFile.getSavePath());
-                        Log.i("result", result+"");
-                        if (result!=200){
-                            continue;
-                        }else {
-                            if (MyData.uploadingFiles.size()>0) {
-                                MyData.uploadingFiles.remove(0);
-                            }
-                            mHandler.sendEmptyMessage(0);
-                        }
-                    }
-                    mHandler.sendEmptyMessage(1);
-                }
-            }.start();
-
+    public static void uploading(Context context){
+        if (MyData.uploadingFiles.size()>0){
+            upload(context,MyData.uploadingFiles.get(0));
+        }else {
+            PopupUtil.forceDismissPopup();
+            okHttpClient = null;
+            call = null;
+            MyData.uploadingFiles = null;
+            listener.complete();
+        }
     }
-    public static void upload(final Context context) {
-        MyData.uploadingFiles = FindUtil.findNoDirUploadBoxFile(MyData.uploadingFiles);
-        OkHttpClient okHttpClient = new OkHttpClient();
+    public static void upload(final Context context, final BoxFile boxFile) {
+        if (okHttpClient==null) {
+            okHttpClient = new OkHttpClient.Builder().connectTimeout(20, TimeUnit.SECONDS).readTimeout(60, TimeUnit.SECONDS).build();
+        }
         Request.Builder builder = new Request.Builder();
         builder.url(MyData.uploadUrl);
-
         MultipartBody.Builder bodyBuilder = new MultipartBody.Builder();
-        for (BoxFile boxFile:MyData.uploadingFiles) {
-            File apkFile = new File(boxFile.getFilePath());
-            bodyBuilder.addPart(Headers.of("savePath",boxFile.getSavePath()),RequestBody.create(null, apkFile));
-        }
+        builder.addHeader("Charset", CHARSET);
+        builder.addHeader("connection", "keep-alive");
+        builder.addHeader("Content-Type", "multipart/form-data;boundary=" + UUID.randomUUID().toString());
+        builder.addHeader("savePath",boxFile.getSavePath());
+        File apkFile = new File(boxFile.getFilePath());
+        bodyBuilder.addFormDataPart("filename",boxFile.getFileName(),RequestBody.create(null, apkFile));
         MultipartBody build = bodyBuilder.build();
 
         //callback in original thread.
@@ -109,19 +103,20 @@ public class UploadUtil {
             @Override
             public void onUIProgressStart(long totalBytes) {
                 super.onUIProgressStart(totalBytes);
+                PopupUtil.setFileName(boxFile.getFileName());
                 Log.e("TAG", "onUIProgressStart:" + totalBytes);
-                Toast.makeText(context, "开始上传：" + totalBytes, Toast.LENGTH_SHORT).show();
+//                Toast.makeText(context, "开始上传：" + totalBytes, Toast.LENGTH_SHORT).show();
             }
 
             @Override
             public void onUIProgressChanged(long numBytes, long totalBytes, float percent, float speed) {
-                Log.e("TAG", "=============start===============");
-                Log.e("TAG", "numBytes:" + numBytes);
-                Log.e("TAG", "totalBytes:" + totalBytes);
-                Log.e("TAG", "percent:" + percent);
-                Log.e("TAG", "speed:" + speed);
-                Log.e("TAG", "============= end ===============");
-                PopupUtil.update(numBytes,totalBytes,percent,speed);
+//                Log.e("TAG", "=============start===============");
+//                Log.e("TAG", "numBytes:" + numBytes);
+//                Log.e("TAG", "totalBytes:" + totalBytes);
+//                Log.i("TAG", "percent:" + percent);
+//                Log.e("TAG", "speed:" + speed);
+//                Log.e("TAG", "============= end ===============");
+                PopupUtil.update(MyData.uploadedBytes+numBytes,MyData.totalUploadBytes,(float) (MyData.uploadedBytes+numBytes)/MyData.totalUploadBytes,speed);
 //                uploadProgress.setProgress((int) (100 * percent));
 //                uploadInfo.setText("numBytes:" + numBytes + " bytes" + "\ntotalBytes:" + totalBytes + " bytes" + "\npercent:" + percent * 100 + " %" + "\nspeed:" + speed * 1000 / 1024 / 1024 + "  MB/秒");
 
@@ -129,22 +124,28 @@ public class UploadUtil {
 
             //if you don't need this method, don't override this methd. It isn't an abstract method, just an empty method.
             @Override
-            public void onUIProgressFinish() {
-                super.onUIProgressFinish();
-                PopupUtil.forceDismissPopup();
+            public void onUIProgressFinish(long totalBytes) {
+                super.onUIProgressFinish(totalBytes);
+//                PopupUtil.forceDismissPopup();
+                MyData.uploadedBytes= MyData.uploadedBytes+totalBytes;
+                MyData.uploadingFiles.remove(0);
+                uploading(context);
                 Log.e("TAG", "onUIProgressFinish:");
 //                Toast.makeText(getApplicationContext(), "结束上传", Toast.LENGTH_SHORT).show();
             }
         });
-        builder.post(requestBody);
+        builder.method("POST",requestBody);
 
-        Call call = okHttpClient.newCall(builder.build());
+        call = okHttpClient.newCall(builder.build());
 
         call.enqueue(new Callback() {
             @Override
             public void onFailure(Call call, IOException e) {
                 Log.e("TAG", "=============onFailure===============");
                 e.printStackTrace();
+                if (!isCanceled) {
+                    uploading(context);
+                }
             }
 
             @Override
@@ -152,10 +153,29 @@ public class UploadUtil {
                 Log.e("TAG", "=============onResponse===============");
                 Log.e("TAG", "request headers:" + response.request().headers());
                 Log.e("TAG", "response headers:" + response.headers());
+
             }
         });
     }
 
+    public static void startUpload(Context context,final OnCompleteListener listener){
+        UploadUtil.listener = listener;
+        isCanceled = false;
+
+        uploading(context);
+    }
+    public static void cancel(){
+        if (call!=null) {
+            call.cancel();
+        }
+        isCanceled = true;
+        okHttpClient = null;
+        call = null;
+        MyData.uploadingFiles = null;
+    }
+    public interface OnCompleteListener{
+        void complete();
+    }
     public static int uploadFile(File file, String RequestURL,String savePath)
     {
         String result = null;

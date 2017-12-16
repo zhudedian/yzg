@@ -15,7 +15,6 @@ import android.widget.TextView;
 import com.ider.yzg.R;
 import com.ider.yzg.db.BoxFile;
 import com.ider.yzg.db.MyData;
-import com.ider.yzg.db.TvApp;
 import com.ider.yzg.view.ItemOpMenu;
 
 import java.util.List;
@@ -39,8 +38,11 @@ public class FileAdapter extends ArrayAdapter<BoxFile> {
     }
     @Override
     public View getView(int posetion, View convertView, ViewGroup parent){
-        final BoxFile boxFile = getItem(posetion);
         View view;
+        try {
+
+
+        final BoxFile boxFile = getItem(posetion);
         FileAdapter.ViewHolder viewHolder;
         if (convertView==null){
             view = LayoutInflater.from(getContext()).inflate(resourceId,parent,false);
@@ -127,6 +129,10 @@ public class FileAdapter extends ArrayAdapter<BoxFile> {
             }
         });
         setListener(viewHolder,boxFile);
+        }catch (Exception e){
+            e.printStackTrace();
+            view = convertView;
+        }
         return view;
     }
     private void setListener(FileAdapter.ViewHolder viewHolder,final BoxFile boxFile){

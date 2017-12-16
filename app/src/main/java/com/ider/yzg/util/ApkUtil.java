@@ -35,7 +35,8 @@ public class ApkUtil {
         for (int i = 0 ;i<localApps.size();i++){
             ApkFile apkFile = localApps.get(i);
             for (TvApp app:apps){
-                if (apkFile.getPackageName().equals(app.getPackageName())){
+//                Log.i(TAG,"getFileName"+apkFile.getFileName()+"packageName:"+apkFile.getPackageName());
+                if (apkFile.getPackageName()!=null&&apkFile.getPackageName().equals(app.getPackageName())){
 //                    Log.i(TAG,"packageName:"+apkFile.getPackageName());
                     if (apkFile.getVersionCode()>app.getVersionCode()){
                         apkFile.setInstallLevel(2);
@@ -73,7 +74,7 @@ public class ApkUtil {
             String versionName=info.versionName;       //得到版本信息
             int versionCode = info.versionCode;
 //            int ver = Integer.getInteger(version);
-            //Log.i(TAG,"packageName:"+packageName+";versionName:"+versionName+";versionCode"+versionCode);
+//            Log.i(TAG,"packageName:"+packageName+";versionName:"+versionName+";versionCode"+versionCode);
 //            Toast.makeText(context, "packageName:"+packageName+";version:"+version, Toast.LENGTH_LONG).show();
             Drawable icon = appInfo.loadIcon(pm);//得到图标信息
 //            TextView tv = (TextView)findViewById(R.id.tv); //显示图标

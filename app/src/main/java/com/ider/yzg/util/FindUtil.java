@@ -17,10 +17,13 @@ public class FindUtil {
 
     public static List<BoxFile> findNoDirUploadBoxFile(List<BoxFile> list){
         List<BoxFile> newList = new ArrayList<>();
+        MyData.totalUploadBytes = 0;
+        MyData.uploadedBytes = 0;
         for (BoxFile boxFile:list){
             if (boxFile.getFileType()==1){
                 addNoDirFile(new File(boxFile.getFilePath()),boxFile.getSavePath(),newList);
             }else {
+                MyData.totalUploadBytes = MyData.totalUploadBytes+FileUtil.getLSize(new File(boxFile.getFilePath()));
                 newList.add(boxFile);
             }
         }
@@ -33,6 +36,7 @@ public class FindUtil {
                 if (f.isDirectory()){
                     addNoDirFile(f,savePath+File.separator+file.getName(),list);
                 }else {
+                    MyData.totalUploadBytes = MyData.totalUploadBytes+FileUtil.getLSize(f);
                     addBoxFile(f,savePath+File.separator+file.getName(),list);
                 }
             }

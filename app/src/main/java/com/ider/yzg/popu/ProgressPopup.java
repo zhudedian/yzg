@@ -9,6 +9,7 @@ import android.widget.LinearLayout;
 import android.widget.PopupWindow;
 import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
+import android.widget.SeekBar;
 import android.widget.TextView;
 
 import com.ider.yzg.R;
@@ -28,26 +29,29 @@ public class ProgressPopup extends PopupWindow {
     private PopupWindow popupWindow;
     private RelativeLayout outsideRelative;
     private LinearLayout innerLinear;
-    private TextView title,parent,rate;
+    private TextView title,parent,rate,fileName;
     private CheckBox allCheck;
     private ProgressBar progressBar;
     private Button cancel;
     private boolean outsideTouchable;
     private boolean cancelable = false;
+    private OnCancelListener listener;
 
     public ProgressPopup(Context context,String titleStr,boolean outsideTouchable,OnCancelListener listener){
         this.context = context;
         this.outsideTouchable = outsideTouchable;
-        View view = getView(listener);
+        this.listener = listener;
+        View view = getView();
         title.setText(titleStr);
         popupWindow = new PopupWindow(view,-1,-1);
     }
-    private View getView(final OnCancelListener listener){
+    private View getView(){
         View view = View.inflate(context, R.layout.progress_popup, null);
         outsideRelative = (RelativeLayout)view.findViewById(R.id.outside_relative);
         innerLinear = (LinearLayout) view.findViewById(R.id.inner_linear);
         progressBar = (ProgressBar)view.findViewById(R.id.progress_bar);
         title = (TextView)view.findViewById(R.id.title);
+        fileName = (TextView)view.findViewById(R.id.file_name);
         parent = (TextView)view.findViewById(R.id.parent);
         rate = (TextView)view.findViewById(R.id.rate);
         cancel = (Button)view.findViewById(R.id.cancel_action);
@@ -98,14 +102,16 @@ public class ProgressPopup extends PopupWindow {
     public void update(long numBytes, long totalBytes,float parents,float speed){
         //if (parent!=null&&progressBar!=null&&rate!=null) {
             parent.setText(FileUtil.getSize(numBytes) + "/" + FileUtil.getSize(totalBytes));
-            progressBar.setProgress((int) parents * 100);
+            progressBar.setProgress((int) (parents * 100));
             rate.setText(FileUtil.getSize(speed) + "/s");
         //}
     }
     public void setMaxProgress(int maxProgress){
         progressBar.setMax(maxProgress);
     }
-
+    public void setFileName(String fileNameStr){
+        fileName.setText(fileNameStr);
+    }
     public interface OnCancelListener{
         void onCancelClick();
     }

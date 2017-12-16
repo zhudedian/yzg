@@ -23,7 +23,7 @@ public class ConfirmPopup {
     private PopupWindow popupWindow;
     private RelativeLayout outsideRelative;
     private LinearLayout innerLinear,allCheckLinear;
-    private TextView title,notice;
+    private TextView title,notice,checkText;
     private CheckBox allCheck;
     private Button ok,cancel;
     private boolean outsideTouchable;
@@ -40,6 +40,18 @@ public class ConfirmPopup {
         cancel.setText(cancelStr);
         popupWindow = new PopupWindow(view,-1,-1);
     }
+    public ConfirmPopup(Context context,String titleStr,String noticeStr,String checkStr,String okStr,
+                        String cancelStr,boolean outsideTouchable,ConfirmPopu.OnOkListener listener){
+        this.context = context;
+        this.outsideTouchable = outsideTouchable;
+        View view = getView(listener);
+        title.setText(titleStr);
+        notice.setText(noticeStr);
+        checkText.setText(checkStr);
+        ok.setText(okStr);
+        cancel.setText(cancelStr);
+        popupWindow = new PopupWindow(view,-1,-1);
+    }
     private View getView(final ConfirmPopu.OnOkListener listener){
         View view = View.inflate(context, R.layout.confirm_popu, null);
         outsideRelative = (RelativeLayout)view.findViewById(R.id.outside_relative);
@@ -47,6 +59,7 @@ public class ConfirmPopup {
         allCheckLinear = (LinearLayout)view.findViewById(R.id.all_select);
         title = (TextView)view.findViewById(R.id.title);
         notice = (TextView)view.findViewById(R.id.file_name);
+        checkText = (TextView)view.findViewById(R.id.all_check_text);
         allCheck = (CheckBox)view.findViewById(R.id.all_select_check);
         cancel = (Button)view.findViewById(R.id.cancel_action);
         ok = (Button)view.findViewById(R.id.ok_action);
@@ -82,6 +95,10 @@ public class ConfirmPopup {
         this.cancelable = cancelable;
         return this;
     }
+    public void setText(String noticeStr,String checkStr){
+        notice.setText(noticeStr);
+        checkText.setText(checkStr);
+    }
     public boolean isCancelable(){
         return this.cancelable;
     }
@@ -102,6 +119,9 @@ public class ConfirmPopup {
     }
     public void setAllCheckLinearVisible(int visible){
         allCheckLinear.setVisibility(visible);
+    }
+    public boolean isAllCheckSelect(){
+        return allCheck.isChecked();
     }
 
     public interface OnOkListener{

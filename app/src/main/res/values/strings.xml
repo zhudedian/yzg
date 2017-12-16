@@ -40,29 +40,33 @@
     <string name="item_new_create">新建</string>
 
     <string name="popup_remove_title">确认删除?</string>
+    <string name="popup_over_title">是否覆盖?</string>
     <string name="popup_upload_title">正在上传……</string>
     <string name="popup_ok_button">确定</string>
     <string name="popup_cancel_button">取消</string>
-    <string name="popup_more_select_notice">已选中%1$d个文件（夹）</string>
+    <string name="popup_more_select_notice">%1$d个文件（夹）</string>
 
-    <string name="def_path_info">/storage/emulated/0\"type=\"1\"name=\"Music\"size=\"4.12G\"type=\"1\"name=\"Ringtones\"size=\"4.12G
-        \"type=\"1\"name=\"Alarms\"size=\"4.12G\"type=\"1\"name=\"Movies\"size=\"4.12G\"type=\"1\"name=\"Download\"size=\"4.12G
-        \"type=\"1\"name=\"DCIM\"size=\"4.12G\"type=\"1\"name=\"Android\"size=\"4.12G\"type=\"1\"name=\"tencent\"size=\"4.12G
-        \"type=\"1\"name=\"Picture\"size=\"4.12G\"type=\"1\"name=\"Pictures\"size=\"4.12G</string>
+    <string name="def_path_info">/storage/emulated/0\"type=\"1\"name=\"Music\"size=\"13\"time=\"2017-12-14 06:08\"type=\"1\"name=\"
+        Podcasts\"size=\"0\"time=\"2017-08-18 06:15\"type=\"1\"name=\"Ringtones\"size=\"0\"time=\"2017-08-18 06:15\"type=\"1\"name=\"
+        Alarms\"size=\"3\"time=\"2017-09-07 06:19\"type=\"1\"name=\"Notifications\"size=\"1\"time=\"2017-08-18 06:15\"type=\"1\"name=\"
+        install_\"size=\"0\"time=\"2017-12-07 04:01\"type=\"1\"name=\"Movies\"size=\"1\"time=\"2017-09-09 05:40\"type=\"1\"name=\"
+        Download\"size=\"1\"time=\"2017-10-18 05:58\"type=\"1\"name=\"DCIM\"size=\"3\"time=\"2017-09-05 05:56\"type=\"1\"name=\"
+        Android\"size=\"2\"time=\"2017-09-11 20:49\"type=\"1\"name=\"tencent\"size=\"10\"time=\"2017-10-17 02:54\"type=\"1\"name=\"
+        Pictures\"size=\"2\"time=\"2017-10-23 03:18</string>
 
     <string name="def_tvapp_info">/sdcard/Pictures/icons\"type=\"1\"label=\"携程旅行\"pckn=\"ctrip.android.view\"verC=\"163\"verN=\"7.7.1
         \"type=\"1\"label=\"Tencent Video\"pckn=\"com.tencent.qqlive\"verC=\"13049\"verN=\"5.8.1.13049\"type=\"1\"label=\"QQ邮箱
         \"pckn=\"com.tencent.androidqqmail\"verC=\"10123606\"verN=\"5.2.6\"type=\"1\"label=\"手机淘宝\"pckn=\"com.taobao.taobao
         \"verC=\"161\"verN=\"6.11.0\"type=\"1\"label=\"今日头条\"pckn=\"com.ss.android.article.news\"verC=\"637\"verN=\"6.3.7
         \"type=\"1\"label=\"手机营业厅\"pckn=\"com.sinovatech.unicom.ui\"verC=\"54\"verN=\"5.4.1\"type=\"1\"label=\"美团\"pckn=\"
-        com.sankuai.meituan\"verC=\"481\"verN=\"7.8.1\"type=\"1\"label=\"Netflix\"pckn=\"com.netflix.mediaclient\"verC=\"15145
-        \"verN=\"4.16.1 build 15145\"type=\"1\"label=\"Alipay\"pckn=\"com.eg.android.AlipayGphone\"verC=\"115\"verN=\"10.1.2.091816
+        com.sankuai.meituan\"verC=\"481\"verN=\"7.8.1\"type=\"1\"label=\"Netflix\"pckn=\"com.netflix.mediaclient\"verC=\"15145\"verN=\"
+        4.16.1 build 15145\"type=\"1\"label=\"Alipay\"pckn=\"com.eg.android.AlipayGphone\"verC=\"115\"verN=\"10.1.2.091816
         \"type=\"1\"label=\"当贝市场\"pckn=\"com.dangbeimarket\"verC=\"148\"verN=\"4.0.4\"type=\"1\"label=\"Baidu\"pckn=\"com.baidu.searchbox
-        \"verC=\"37750016\"verN=\"9.0.0.10\"type=\"1\"label=\"Qunar Travel\"pckn=\"com.Qunar\"verC=\"149\"verN=\"8.6.4\"type=\"0\"label=
-        \"Kodi\"pckn=\"org.xbmc.kodi\"verC=\"173000\"verN=\"17.3\"type=\"0\"label=\"Browser\"pckn=\"org.chromium.webview_shell\"verC=\"1\"verN=
-        \"1.0\"type=\"0\"label=\"MoviePlayer\"pckn=\"com.droidlogic.videoplayer\"verC=\"1\"verN=\"1.0\"type=\"0\"label=\"Read Logs\"pckn=\"
-        com.droidlogic.readlog\"verC=\"12\"verN=\"1.2\"type=\"0\"label=\"Miracast\"pckn=\"com.droidlogic.miracast\"verC=\"20140127\"verN=
-        \"1.3.201401271346\"type=\"0\"label=\"Media Center\"pckn=\"com.droidlogic.mediacenter\"verC=\"2\"verN=\"v201510232109\"type=\"0\"
+        \"verC=\"37750016\"verN=\"9.0.0.10\"type=\"1\"label=\"Qunar Travel\"pckn=\"com.Qunar\"verC=\"149\"verN=\"8.6.4\"type=\"0\"label=\"
+        Kodi\"pckn=\"org.xbmc.kodi\"verC=\"173000\"verN=\"17.3\"type=\"0\"label=\"Browser\"pckn=\"org.chromium.webview_shell\"verC=\"1\"verN=\"
+        1.0\"type=\"0\"label=\"MoviePlayer\"pckn=\"com.droidlogic.videoplayer\"verC=\"1\"verN=\"1.0\"type=\"0\"label=\"Read Logs\"pckn=\"
+        com.droidlogic.readlog\"verC=\"12\"verN=\"1.2\"type=\"0\"label=\"Miracast\"pckn=\"com.droidlogic.miracast\"verC=\"20140127\"verN=\"
+        1.3.201401271346\"type=\"0\"label=\"Media Center\"pckn=\"com.droidlogic.mediacenter\"verC=\"2\"verN=\"v201510232109\"type=\"0\"
         label=\"AppInstaller\"pckn=\"com.droidlogic.appinstall\"verC=\"1\"verN=\"1.0\"type=\"0\"label=\"PPPoE\"pckn=\"com.droidlogic.PPPoE
         \"verC=\"1\"verN=\"1.0\"type=\"0\"label=\"FileBrowser\"pckn=\"com.droidlogic.FileBrower\"verC=\"1\"verN=\"4.0\"type=\"0\"label=\"Files
         \"pckn=\"com.android.documentsui\"verC=\"25\"verN=\"7.1.1\"type=\"0"label=\"Settings\"pckn=\"com.android.settings\"verC=\"25\"verN=\"7.1.1</string>

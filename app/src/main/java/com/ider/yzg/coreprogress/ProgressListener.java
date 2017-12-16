@@ -36,13 +36,13 @@ public abstract class ProgressListener implements ProgressCallback {
                 intervalTime += 1;
             }
             long updateBytes = numBytes - lastBytesWritten;
-            final long networkSpeed = updateBytes / intervalTime;
+            final long networkSpeed = updateBytes / intervalTime*1000;
             onProgressChanged(numBytes, totalBytes, percent, networkSpeed);
             lastRefreshTime = System.currentTimeMillis();
             lastBytesWritten = numBytes;
         }
         if (numBytes == totalBytes || percent >= 1F) {
-            onProgressFinish();
+            onProgressFinish(totalBytes);
         }
     }
 
@@ -68,7 +68,7 @@ public abstract class ProgressListener implements ProgressCallback {
     /**
      * 进度结束
      */
-    public void onProgressFinish() {
+    public void onProgressFinish(long totalBytes) {
 
     }
 }

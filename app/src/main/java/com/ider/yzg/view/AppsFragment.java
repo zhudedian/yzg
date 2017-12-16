@@ -346,8 +346,8 @@ public class AppsFragment extends Fragment implements View.OnClickListener,Fragm
                 @Override
                 public void run(){
                     ApkUtil.getApksInfo(context,localApps);
-                    mHandler.sendEmptyMessage(0);
                     isLocalOk = true;
+                    mHandler.sendEmptyMessage(0);
                     mHandler.sendEmptyMessage(1);
                 }
             }.start();
@@ -369,14 +369,18 @@ public class AppsFragment extends Fragment implements View.OnClickListener,Fragm
                                     localApps.clear();
                                     localApps.addAll(findApks);
                                     ApkUtil.getApksInfo(context, localApps);
+                                    isLocalOk = true;
+                                    mHandler.sendEmptyMessage(0);
+
+                                    mHandler.sendEmptyMessage(1);
                                 }
-                                mHandler.sendEmptyMessage(0);
-                                isLocalOk = true;
-                                mHandler.sendEmptyMessage(1);
+
                             }
                         }.start();
                     }
                 }
+            }else {
+
             }
         } else {
 
@@ -424,6 +428,7 @@ public class AppsFragment extends Fragment implements View.OnClickListener,Fragm
                 if (filess!=null)findApk(filess,isFirst);//用递归递归
             }else if(FileUtil.isApk(f)){
                 ApkFile apkFile = new ApkFile(f.getName(),f.getPath(),FileUtil.getSize(f));
+//                ApkUtil.getInfo(context,apkFile);
                 if (isFirst){
                     if (!localApps.contains(apkFile)){
                         synchronized (adapter){
@@ -445,7 +450,7 @@ public class AppsFragment extends Fragment implements View.OnClickListener,Fragm
                             DataSupport.deleteAll(ApkFile.class, "filePath = ?", f.getPath());
                         }
                         apkFile.save();
-                        Log.i(TAG,"localApps.size("+DataSupport.findAll(ApkFile.class).size());
+//                        Log.i(TAG,"localApps.size("+DataSupport.findAll(ApkFile.class).size());
                     }
                 }
             }
@@ -518,8 +523,11 @@ public class AppsFragment extends Fragment implements View.OnClickListener,Fragm
             new Thread(){
                 @Override
                 public void run(){
-                    ApkUtil.isApkInstalls(localApps,apps);
-                    mHandler.sendEmptyMessage(0);
+                    synchronized (localApps) {
+                        ApkUtil.isApkInstalls(localApps, apps);
+                        mHandler.sendEmptyMessage(0);
+                    }
+
                 }
             }.start();
         }

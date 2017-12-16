@@ -30,7 +30,8 @@ public class MyData {
     public static File fileSelect = Environment.getExternalStorageDirectory();
     public static List<BoxFile> boxFiles = new ArrayList<>();
     public static List<BoxFile> selectBoxFiles = new ArrayList<>();
-    public static List<BoxFile> uploadingFiles = new ArrayList<>();
+    public static List<BoxFile> uploadingFiles ;
+    public static List<BoxFile> hideFiles;
     public static List<BoxFile> downLoadingFiles = new ArrayList<>();
     public static List<BoxFile> copingFiles = new ArrayList<>();
     public static String boxFilePath="";
@@ -38,6 +39,8 @@ public class MyData {
     public static String screenshotSavePath;
     public static SocketClient client;
     public static boolean isRequesting;
+    public static long totalUploadBytes;
+    public static long uploadedBytes;
     public static String disPlayMode = "normal";
 
     public final static String NORMAL = "normal";
