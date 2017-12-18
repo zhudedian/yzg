@@ -133,6 +133,28 @@ public class FileUtil {
         }
         return "0";
     }
+    public static long getFileLCount(File file){
+        if (file.isDirectory()){
+            File[] files = file.listFiles();
+            if (files!=null){
+                return files.length;
+            }else {
+                return 0;
+            }
+        }
+        return 0;
+    }
+    public static void dirDelete(File dir){
+        File[] files = dir.listFiles();
+        for (File file:files){
+            if (file.isDirectory()){
+                dirDelete(file);
+            }else {
+                file.delete();
+            }
+        }
+        dir.delete();
+    }
     public static boolean isApk(File file){
         if (getFileType(file).equals(str_apk_type)){
             return true;

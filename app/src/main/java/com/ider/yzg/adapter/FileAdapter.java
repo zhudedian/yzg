@@ -15,6 +15,7 @@ import android.widget.TextView;
 import com.ider.yzg.R;
 import com.ider.yzg.db.BoxFile;
 import com.ider.yzg.db.MyData;
+import com.ider.yzg.util.FileUtil;
 import com.ider.yzg.view.ItemOpMenu;
 
 import java.util.List;
@@ -67,9 +68,9 @@ public class FileAdapter extends ArrayAdapter<BoxFile> {
         viewHolder.name.setText(boxFile.getFileName());
 //        viewHolder.name.setMovementMethod(ScrollingMovementMethod.getInstance());
         viewHolder.path.setText(boxFile.getCreateTime());
-        viewHolder.size.setText(boxFile.getFileSize());
+        viewHolder.size.setText(FileUtil.getSize(boxFile.getFileSize()));
         if (boxFile.getFileType()==1){
-            if (boxFile.getFileSize().equals("0")){
+            if (boxFile.getFileSize()==0){
                 viewHolder.size.setText(context.getResources().getString(R.string.empty_dir));
             }else {
                 viewHolder.size.setText(boxFile.getFileSize() + context.getResources().getString(R.string.file_count_end));

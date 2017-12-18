@@ -1,28 +1,22 @@
 package com.ider.yzg.view;
 
-import android.Manifest;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
-import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
+import android.os.Looper;
 import android.os.Message;
-import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
-import android.support.v4.content.ContextCompat;
-import android.support.v4.media.MediaMetadataCompat;
 import android.util.Log;
-import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.AdapterView;
-import android.widget.Button;
-import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.ProgressBar;
@@ -33,19 +27,16 @@ import com.ider.yzg.R;
 import com.ider.yzg.adapter.FileAdapter;
 import com.ider.yzg.db.BoxFile;
 import com.ider.yzg.db.MyData;
-import com.ider.yzg.db.TvApp;
-import com.ider.yzg.popu.PopuUtils;
-import com.ider.yzg.popu.PopupDialog;
+import com.ider.yzg.popu.EditPopup;
 import com.ider.yzg.popu.PopupUtil;
-import com.ider.yzg.popu.Popus;
 import com.ider.yzg.popu.ProgressPopup;
+import com.ider.yzg.util.DownloadUtil;
 import com.ider.yzg.util.FileFind;
+import com.ider.yzg.util.FileUtil;
 import com.ider.yzg.util.FindUtil;
 import com.ider.yzg.util.FragmentInter;
-
 import com.ider.yzg.util.ListSort;
 import com.ider.yzg.util.RequestUtil;
-import com.ider.yzg.util.TvAppSort;
 import com.ider.yzg.util.UploadUtil;
 
 import org.litepal.crud.DataSupport;
@@ -60,14 +51,8 @@ import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
 
-import static android.R.attr.breadCrumbShortTitle;
-import static android.R.attr.id;
-import static android.os.Build.VERSION_CODES.M;
-import static com.ider.yzg.R.id.apps;
-import static com.ider.yzg.db.MyData.NORMAL;
 import static com.ider.yzg.db.MyData.fileSelect;
-import static com.ider.yzg.db.MyData.uploadingFiles;
-import static com.ider.yzg.util.SocketClient.mHandler;
+
 
 /**
  * Created by Eric on 2017/11/30.
@@ -78,6 +63,7 @@ public class TransportFragment extends Fragment implements View.OnClickListener,
     private Context context;
     private SharedPreferences preferences;
     private SharedPreferences.Editor editor;
+    private InputMethodManager imm;
 
     private OperateBar operateBar;
     private TextView tvbox, mobile;
@@ -113,7 +99,6 @@ public class TransportFragment extends Fragment implements View.OnClickListener,
         mobile = (TextView) view.findViewById(R.id.mobile_button);
         listView = (ListView) view.findViewById(R.id.list_view);
         progressBar = (ProgressBar) view.findViewById(R.id.progress_bar);
-
         return view;
     }
 
@@ -123,6 +108,7 @@ public class TransportFragment extends Fragment implements View.OnClickListener,
         context = getContext();
         preferences = context.getSharedPreferences("yzg_prefers", Context.MODE_PRIVATE);
         editor = preferences.edit();
+        imm = (InputMethodManager) context.getSystemService(Context.INPUT_METHOD_SERVICE);
         okHttpClient = new OkHttpClient.Builder().connectTimeout(20, TimeUnit.SECONDS).readTimeout(60, TimeUnit.SECONDS).build();
         setListener();
         if (adapter==null){
@@ -275,34 +261,7 @@ public class TransportFragment extends Fragment implements View.OnClickListener,
                 if (isRemove){
                     showDeleteConfirm();
                 }else if (isTrans){
-                    if (MyData.disPlayMode.equals(MyData.NORMAL)){
-                        if (MyData.uploadingFiles==null){
-                            MyData.uploadingFiles = new ArrayList<BoxFile>();
-                        }
-                        MyData.uploadingFiles.addAll(moSelectFiles);
-                        moSelectFiles.clear();
-                        MyData.disPlayMode=MyData.TRANS;
-                        if (page==2) {
-                            page = 1;
-                        }
-                        initView();
-                        operateBar.showTransMenu();
-                    }else {
-                        for (BoxFile boxFile:MyData.uploadingFiles){
-                            boxFile.setSavePath(MyData.boxFilePath);
-                            if (MyData.hideFiles.contains(boxFile)){
-                                if (overWriteFiles ==null){
-                                    overWriteFiles = new ArrayList<BoxFile>();
-                                }
-                                overWriteFiles.add(boxFile);
-                            }
-                        }
-                        if (overWriteFiles!=null&&overWriteFiles.size()>0){
-                           showOverConfirmPopup();
-                        }else {
-                            startUpload();
-                        }
-                    }
+                    trans();
                 }else if (isCancel){
                     if (page ==1){
                         MyData.disPlayMode = MyData.NORMAL;
@@ -312,6 +271,10 @@ public class TransportFragment extends Fragment implements View.OnClickListener,
                         MyData.disPlayMode = MyData.NORMAL;
                         page = 1;
                         initView();
+                    }
+                }else if (isRename){
+                    if (page==1) {
+                        showRenameEditPopup(MyData.selectBoxFiles.get(0));
                     }
                 }
             }
@@ -483,14 +446,72 @@ public class TransportFragment extends Fragment implements View.OnClickListener,
         }
         isIniting = false;
     }
+    private void startDownload(List<BoxFile> list){
+        if (list.size()>0) {
+            PopupUtil.getDownloadPopup(context, new ProgressPopup.OnCancelListener() {
+                @Override
+                public void onCancelClick() {
+                    DownloadUtil.cancel();
+                    PopupUtil.forceDismissPopup();
+                    MyData.disPlayMode = MyData.NORMAL;
+                    page = 1;
+                    initView();
+                }
+            }).show(listView);
+            PopupUtil.setDownloadTitle(context.getString(R.string.popup_plan_download_title));
+            FindUtil.findNoDirDownloadBoxFile(list, new FindUtil.FindCompleteListener() {
+                @Override
+                public void complete(long totalBytes, List<BoxFile> list) {
+                    PopupUtil.setDownloadTitle(context.getString(R.string.popup_download_title));
+                    DownloadUtil.startDownload(list,totalBytes,new DownloadUtil.OnCompleteListener() {
+                        @Override
+                        public void complete() {
+                            MyData.disPlayMode = MyData.NORMAL;
+                            operateBar.setVisibility(View.GONE);
+                            Handler handler = new Handler();
+                            handler.postDelayed(new Runnable() {
+                                @Override
+                                public void run() {
+                                    init();
+                                }
+                            }, 1000);
+                        }
+                    });
+                }
+            });
 
-    private void startUpload(){
-        if (MyData.uploadingFiles!=null&&MyData.uploadingFiles.size()>0) {
-            MyData.uploadingFiles = FindUtil.findNoDirUploadBoxFile(MyData.uploadingFiles);
+        }else {
+            MyData.disPlayMode = MyData.NORMAL;
+            page = 1;
+            initView();
+        }
+    }
+    private void startUpload(List<BoxFile> list){
+        if (list.size()>0) {
+            FindUtil.findNoDirUploadBoxFile(list, new FindUtil.FindCompleteListener() {
+                @Override
+                public void complete(long totalBytes, List<BoxFile> list) {
+                    UploadUtil.startUpload(list,totalBytes,new UploadUtil.OnCompleteListener() {
+                        @Override
+                        public void complete() {
+                            MyData.disPlayMode = MyData.NORMAL;
+                            operateBar.setVisibility(View.GONE);
+                            Handler handler = new Handler();
+                            handler.postDelayed(new Runnable() {
+                                @Override
+                                public void run() {
+                                    init();
+                                }
+                            }, 1000);
+                        }
+                    });
+                }
+            });
             PopupUtil.getUploadPopup(context, new ProgressPopup.OnCancelListener() {
                 @Override
                 public void onCancelClick() {
                     UploadUtil.cancel();
+                    PopupUtil.forceDismissPopup();
                     MyData.disPlayMode = MyData.NORMAL;
                     page = 2;
                     MyData.isShowCheck = true;
@@ -498,65 +519,80 @@ public class TransportFragment extends Fragment implements View.OnClickListener,
                 }
             }).show(listView);
 
-            UploadUtil.startUpload(context, new UploadUtil.OnCompleteListener() {
-                @Override
-                public void complete() {
-                    MyData.disPlayMode = MyData.NORMAL;
-                    operateBar.setVisibility(View.GONE);
-                    Handler handler = new Handler();
-                    handler.postDelayed(new Runnable() {
-                        @Override
-                        public void run() {
-                            init();
-                        }
-                    }, 1000);
 
-                }
-            });
         }else {
             MyData.disPlayMode = MyData.NORMAL;
             page = 2;
             initView();
         }
     }
-    private void showOverConfirmPopup(){
-        String checkStr = "剩下"+(overWriteFiles.size()-1)+" 全选：";
-        PopupUtil.getOverConfirmPopup(context, overWriteFiles.get(0).getFileName(), checkStr,new ConfirmPopu.OnOkListener() {
+    private void showOverConfirmPopup(final List<BoxFile> list,final List<BoxFile> overList){
+        String checkStr = "剩下"+(overList.size()-1)+" 全选：";
+        PopupUtil.getOverConfirmPopup(context, overList.get(0).getFileName(), checkStr,new ConfirmPopu.OnOkListener() {
             @Override
             public void onOkClick(boolean isOk, boolean isAllCheck) {
                 if (isOk) {
                     if (PopupUtil.isAllCheck()) {
-                        overWriteFiles.clear();
+                        overList.clear();
                     } else{
-                        overWriteFiles.remove(0);
+                        overList.remove(0);
                     }
                     PopupUtil.forceDismissPopup();
-                    if (overWriteFiles.size()>0){
-                        showOverConfirmPopup();
+                    if (overList.size()>0){
+                        showOverConfirmPopup(list,overList);
                     }else {
-                        startUpload();
+                        if (page==1) {
+                            startUpload(list);
+                        }else {
+                            startDownload(list);
+                        }
                     }
                 }else {
                     if (PopupUtil.isAllCheck()) {
-                        MyData.uploadingFiles.removeAll(overWriteFiles);
-                        overWriteFiles.clear();
+                        list.removeAll(overList);
+                        overList.clear();
                     } else{
-                        MyData.uploadingFiles.remove(overWriteFiles.get(0));
-                        overWriteFiles.remove(0);
+                        list.remove(overList.get(0));
+                        overList.remove(0);
                     }
                     PopupUtil.forceDismissPopup();
-                    if (overWriteFiles.size()>0){
-                        showOverConfirmPopup();
+                    if (overList.size()>0){
+                        showOverConfirmPopup(list,overList);
                     }else {
-                        startUpload();
+                        if (page==1) {
+                            startUpload(list);
+                        }else {
+                            startDownload(list);
+                        }
                     }
                 }
             }
         }).show(listView);
-        if (overWriteFiles.size()==1){
+        if (overList.size()==1){
             PopupUtil.setAllCheckVisible(View.GONE);
         }
 
+    }
+    private void showRenameEditPopup(final BoxFile boxFile){
+        MyData.disPlayMode=MyData.TRANS;
+        PopupUtil.getEditPopup(context, boxFile.getFileName(), new EditPopup.OnOkListener() {
+            @Override
+            public void onOkClick(boolean isOk, String editStr) {
+                if (isOk){
+                    if (page==1) {
+                        rename(boxFile, editStr);
+                    }
+                    PopupUtil.forceDismissPopup();
+                }else {
+                    PopupUtil.forceDismissPopup();
+                }
+                MyData.disPlayMode=MyData.NORMAL;
+            }
+            @Override
+            public void showImm(View view){
+                imm.showSoftInput(view,InputMethodManager.SHOW_FORCED);
+            }
+        }).show(listView);
     }
     private void showDeleteConfirm(){
         String noticeStr = "已选";
@@ -581,21 +617,86 @@ public class TransportFragment extends Fragment implements View.OnClickListener,
             }
         }).show(listView);
     }
-    private void delete() {
-        fileName = "\"delete=\"" + MyData.boxFilePath;
-        for (int i = 0; i < MyData.selectBoxFiles.size(); i++) {
-            fileName = fileName + "name=" + MyData.selectBoxFiles.get(i).getFileName();
-        }
-        final String comment = changeToUnicode(fileName);
-        progressBar.setVisibility(View.VISIBLE);
-        MyData.boxFiles.clear();
-        boxAdapter.notifyDataSetChanged();
-        RequestUtil.requestWithComment(comment, new RequestUtil.HandleResult() {
-            @Override
-            public void resultHandle(String result) {
-                handResult(result);
+    private void trans(){
+        if (MyData.disPlayMode.equals(MyData.NORMAL)){
+            MyData.disPlayMode=MyData.TRANS;
+            if (page==2) {
+                page = 1;
+            }else {
+                page = 2;
             }
-        });
+            initView();
+            operateBar.showTransMenu();
+        }else {
+            final List<BoxFile> list = new ArrayList<>();
+            final List<BoxFile> overList = new ArrayList<>();
+            if (page ==1) {
+                list.addAll(moSelectFiles);
+                moSelectFiles.clear();
+                for (BoxFile boxFile : list) {
+                    boxFile.setSavePath(MyData.boxFilePath);
+                    if (MyData.boxFiles.contains(boxFile)){
+                        overList.add(boxFile);
+                    }
+                    if (MyData.hideFiles.contains(boxFile)) {
+                        overList.add(boxFile);
+                    }
+                }
+                if (overList.size() > 0) {
+                    showOverConfirmPopup(list,overList);
+                } else {
+                    startUpload(list);
+                }
+            }else {
+                list.addAll(MyData.selectBoxFiles);
+                MyData.selectBoxFiles.clear();
+                for (BoxFile boxFile : list) {
+                    boxFile.setSavePath(MyData.fileSelect.getPath());
+                    if (moFiles.contains(boxFile)){
+                        overList.add(boxFile);
+                    }
+                    if (MyData.hideFiles.contains(boxFile)) {
+                        overList.add(boxFile);
+                    }
+                }
+                if ( overList.size() > 0) {
+                    showOverConfirmPopup(list,overList);
+                } else {
+                    startDownload(list);
+                }
+            }
+        }
+    }
+    private void delete() {
+        if (page==1) {
+            fileName = "\"delete=\"" + MyData.boxFilePath;
+            for (int i = 0; i < MyData.selectBoxFiles.size(); i++) {
+                fileName = fileName + "name=" + MyData.selectBoxFiles.get(i).getFileName();
+            }
+            final String comment = changeToUnicode(fileName);
+            progressBar.setVisibility(View.VISIBLE);
+            MyData.boxFiles.clear();
+            boxAdapter.notifyDataSetChanged();
+            RequestUtil.requestWithComment(comment, new RequestUtil.HandleResult() {
+                @Override
+                public void resultHandle(String result) {
+                    handResult(result);
+                }
+            });
+        }else {
+            for (int i=0;i<moSelectFiles.size();i++){
+                File file = new File(moSelectFiles.get(i).getFilePath());
+                if (file.isDirectory()&&file.exists()){
+                    FileUtil.dirDelete(file);
+                }else {
+                    if (file.exists()){
+                        file.delete();
+                    }
+                }
+            }
+            moSelectFiles.clear();
+            init();
+        }
     }
 
     private void createDir(String dirName) {
@@ -689,6 +790,7 @@ public class TransportFragment extends Fragment implements View.OnClickListener,
         }
         isHandle = true;
         if (result.equals("null")) {
+            isHandle = false;
             return;
         }
         if (MyData.hideFiles==null){
@@ -708,13 +810,15 @@ public class TransportFragment extends Fragment implements View.OnClickListener,
             MyData.boxFiles.clear();
             String[] files = result.split("\"type=\"");
             MyData.boxFilePath = files[0];
+            pathTextView.setText(files[0]);
             for (int i = 1; i < files.length; i++) {
                 String[] fils = files[i].split("\"name=\"");
                 int type = Integer.parseInt(fils[0]);
                 String[] fis = fils[1].split("\"size=\"");
                 String[] fi = fis[1].split("\"time=\"");
-                Log.i(TAG,fis[0]);
-                BoxFile boxFile = new BoxFile(type, fis[0], fi[1], fi[0], MyData.boxFilePath + "/" + fis[0]);
+                long size = Long.parseLong(fi[0]);
+//                Log.i(TAG,fis[0]);
+                BoxFile boxFile = new BoxFile(type, fis[0], fi[1], size, MyData.boxFilePath + "/" + fis[0]);
                 if (firstPath) {
                     boxFile.save();
                     editor.putBoolean("data_save_boxfile", true);
@@ -728,6 +832,12 @@ public class TransportFragment extends Fragment implements View.OnClickListener,
             }
             ListSort.sort(MyData.boxFiles);
         }
+//        if (!MyData.disPlayMode.equals(MyData.NORMAL)){
+//
+//        }
+//        boxAdapter.notifyDataSetChanged();
+//        listView.setSelection(0);
+//        progressBar.setVisibility(View.GONE);
         mHandler.sendEmptyMessage(0);
         isHandle = false;
     }
@@ -919,7 +1029,7 @@ public class TransportFragment extends Fragment implements View.OnClickListener,
 
 
 
-    Handler mHandler = new Handler(){
+    Handler mHandler = new Handler(Looper.getMainLooper()){
         @Override
         public void handleMessage(Message msg){
             switch (msg.what){

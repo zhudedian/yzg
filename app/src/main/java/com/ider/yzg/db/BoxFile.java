@@ -20,12 +20,12 @@ public class BoxFile extends DataSupport {
     private String createTime;
     private String savePath;
 
-    private String fileSize;
+    private long fileSize;
 
     public BoxFile(){
 
     }
-    public BoxFile(int types,String fileName,String size){
+    public BoxFile(int types,String fileName,long size){
         this.fileTypes = types;
         this.fileName = fileName;
         this.fileSize = size;
@@ -35,14 +35,14 @@ public class BoxFile extends DataSupport {
         this.filePath = filePath;
     }
 
-    public BoxFile(int types,String fileName,String createTime,String size,String filePath){
+    public BoxFile(int types,String fileName,String createTime,long size,String filePath){
         this.fileTypes = types;
         this.fileName = fileName;
         this.createTime = createTime;
         this.fileSize = size;
         this.filePath = filePath;
     }
-    public BoxFile(int types,String fileName,String createTime,String size,String filePath,String savePath){
+    public BoxFile(int types,String fileName,String createTime,long size,String filePath,String savePath){
         this.fileTypes = types;
         this.fileName = fileName;
         this.createTime = createTime;
@@ -66,11 +66,11 @@ public class BoxFile extends DataSupport {
         return filePath;
     }
 
-    public void setFileSize(String size){
+    public void setFileSize(long size){
         this.fileSize = size;
     }
 
-    public String getFileSize(){
+    public long getFileSize(){
         return fileSize;
     }
 
@@ -115,7 +115,7 @@ public class BoxFile extends DataSupport {
     public boolean equals(Object object){
         if (object instanceof BoxFile){
             BoxFile boxFile= (BoxFile) object;
-            if (boxFile.fileName.equals(this.fileName)){
+            if (boxFile.fileName.equalsIgnoreCase(this.fileName)){
                 return true;
             }else{
                 return false;

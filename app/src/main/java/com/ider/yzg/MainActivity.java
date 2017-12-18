@@ -74,7 +74,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         viewpager.setOnPageChangeListener(new ViewPager.OnPageChangeListener() {
             @Override
             public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
-                Log.i(TAG,"positionOffset="+positionOffset+"positionOffsetPixels="+positionOffsetPixels);
+//                Log.i(TAG,"positionOffset="+positionOffset+"positionOffsetPixels="+positionOffsetPixels);
                 if (positionOffsetPixels == 0&&positionOffset==0) {
                     setDate(position);
                     if (position == 1 && remoteFragment.page == 2) {

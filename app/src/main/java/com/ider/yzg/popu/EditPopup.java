@@ -5,56 +5,52 @@ import android.view.Gravity;
 import android.view.View;
 import android.widget.Button;
 import android.widget.CheckBox;
+import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.PopupWindow;
-import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
-import android.widget.SeekBar;
 import android.widget.TextView;
 
 import com.ider.yzg.R;
-import com.ider.yzg.util.FileUtil;
 import com.ider.yzg.view.ConfirmPopu;
 
-import static android.R.attr.max;
-import static android.R.string.cancel;
-
 /**
- * Created by Eric on 2017/12/15.
+ * Created by Eric on 2017/12/18.
  */
 
-public class ProgressPopup extends PopupWindow {
-
+public class EditPopup {
     private Context context;
     private PopupWindow popupWindow;
     private RelativeLayout outsideRelative;
     private LinearLayout innerLinear;
-    private TextView title,parent,rate,fileName;
-    private CheckBox allCheck;
-    private ProgressBar progressBar;
-    private Button cancel;
+    private TextView title;
+    private EditText editText;
+    private Button ok,cancel;
     private boolean outsideTouchable;
-    private boolean cancelable = false;
-    private OnCancelListener listener;
+    private boolean cancelable = true;
+    private OnOkListener listener;
 
-    public ProgressPopup(Context context,String titleStr,boolean outsideTouchable,OnCancelListener listener){
+    public EditPopup(Context context,String titleStr,String editStr,String okStr,
+                        String cancelStr,boolean outsideTouchable,EditPopup.OnOkListener listener){
         this.context = context;
         this.outsideTouchable = outsideTouchable;
         this.listener = listener;
         View view = getView();
         title.setText(titleStr);
+        editText.setText(editStr);
+        ok.setText(okStr);
+        cancel.setText(cancelStr);
         popupWindow = new PopupWindow(view,-1,-1);
     }
+
     private View getView(){
-        View view = View.inflate(context, R.layout.progress_popup, null);
+        View view = View.inflate(context, R.layout.edit_popup, null);
         outsideRelative = (RelativeLayout)view.findViewById(R.id.outside_relative);
         innerLinear = (LinearLayout) view.findViewById(R.id.inner_linear);
-        progressBar = (ProgressBar)view.findViewById(R.id.progress_bar);
         title = (TextView)view.findViewById(R.id.title);
-        fileName = (TextView)view.findViewById(R.id.file_name);
-        parent = (TextView)view.findViewById(R.id.parent);
-        rate = (TextView)view.findViewById(R.id.rate);
+        editText = (EditText)view.findViewById(R.id.edit_text);
         cancel = (Button)view.findViewById(R.id.cancel_action);
+        ok = (Button)view.findViewById(R.id.ok_action);
         outsideRelative.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -72,23 +68,29 @@ public class ProgressPopup extends PopupWindow {
         cancel.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                listener.onCancelClick();
+                listener.onOkClick(false,editText.getText().toString());
+            }
+        });
+        ok.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                listener.onOkClick(true,editText.getText().toString());
             }
         });
         return view;
     }
-    public ProgressPopup setCancelable(boolean cancelable){
+    public EditPopup setCancelable(boolean cancelable){
         this.cancelable = cancelable;
         return this;
+    }
+    public void setText(String noticeStr,String checkStr){
+
     }
     public boolean isCancelable(){
         return this.cancelable;
     }
     public boolean isShowing(){
-        if (popupWindow!=null) {
-            return popupWindow.isShowing();
-        }
-        return false;
+        return popupWindow.isShowing();
     }
     public void dismiss(){
         if (popupWindow!=null&&popupWindow.isShowing()) {
@@ -96,26 +98,14 @@ public class ProgressPopup extends PopupWindow {
             popupWindow = null;
         }
     }
-    public void setTitle(String titleStr){
-        title.setText(titleStr);
-    }
     public void show(View parent){
         popupWindow.showAtLocation(parent, Gravity.CENTER,0,0);
+        listener.showImm(editText);
     }
-    public void update(long numBytes, long totalBytes,float parents,float speed){
-        //if (parent!=null&&progressBar!=null&&rate!=null) {
-            parent.setText(FileUtil.getSize(numBytes) + "/" + FileUtil.getSize(totalBytes));
-            progressBar.setProgress((int) (parents * 100));
-            rate.setText(FileUtil.getSize(speed) + "/s");
-        //}
-    }
-    public void setMaxProgress(int maxProgress){
-        progressBar.setMax(maxProgress);
-    }
-    public void setFileName(String fileNameStr){
-        fileName.setText(fileNameStr);
-    }
-    public interface OnCancelListener{
-        void onCancelClick();
+
+
+    public interface OnOkListener{
+        void onOkClick(boolean isOk,String editStr);
+        void showImm(View view);
     }
 }

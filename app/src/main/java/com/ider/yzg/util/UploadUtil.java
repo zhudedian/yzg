@@ -1,10 +1,8 @@
 package com.ider.yzg.util;
 
-import android.content.Context;
-import android.os.Handler;
-import android.os.Message;
+
 import android.util.Log;
-import android.widget.Toast;
+
 
 import com.ider.yzg.coreprogress.ProgressHelper;
 import com.ider.yzg.coreprogress.ProgressUIListener;
@@ -25,15 +23,13 @@ import java.util.concurrent.TimeUnit;
 
 import okhttp3.Call;
 import okhttp3.Callback;
-import okhttp3.Headers;
 import okhttp3.MultipartBody;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
 
-import static android.R.id.list;
-import static android.R.id.navigationBarBackground;
+
 
 /**
  * Created by Eric on 2017/12/14.
@@ -41,27 +37,48 @@ import static android.R.id.navigationBarBackground;
 
 public class UploadUtil {
 
+    private static final String TAG = "UploadUtil";
     private static OkHttpClient okHttpClient;
     private static Call call;
     private static OnCompleteListener listener;
-    private static final String TAG = "uploadFile";
+    private static List<BoxFile> uploadingFiles;
+    private static long uploadedBytes;
+    private static long totalUploadBytes;
     private static final int TIME_OUT = 60*1000;   //超时时间
     private static final String CHARSET = "utf-8"; //设置编码
     private static boolean isStart;
     private static boolean isCanceled;
 
-    public static void uploading(Context context){
-        if (MyData.uploadingFiles.size()>0){
-            upload(context,MyData.uploadingFiles.get(0));
+
+    public static void startUpload(List<BoxFile> list,long total,final OnCompleteListener listener){
+        UploadUtil.listener = listener;
+        isCanceled = false;
+        uploadingFiles = list;
+        totalUploadBytes = total;
+        uploadedBytes = 0;
+        uploading();
+    }
+    public static void cancel(){
+        if (call!=null) {
+            call.cancel();
+        }
+        isCanceled = true;
+        okHttpClient = null;
+        call = null;
+        uploadingFiles = null;
+    }
+    public static void uploading(){
+        if (uploadingFiles.size()>0){
+            upload(uploadingFiles.get(0));
         }else {
             PopupUtil.forceDismissPopup();
             okHttpClient = null;
             call = null;
-            MyData.uploadingFiles = null;
+            uploadingFiles = null;
             listener.complete();
         }
     }
-    public static void upload(final Context context, final BoxFile boxFile) {
+    public static void upload( final BoxFile boxFile) {
         if (okHttpClient==null) {
             okHttpClient = new OkHttpClient.Builder().connectTimeout(20, TimeUnit.SECONDS).readTimeout(60, TimeUnit.SECONDS).build();
         }
@@ -116,7 +133,7 @@ public class UploadUtil {
 //                Log.i("TAG", "percent:" + percent);
 //                Log.e("TAG", "speed:" + speed);
 //                Log.e("TAG", "============= end ===============");
-                PopupUtil.update(MyData.uploadedBytes+numBytes,MyData.totalUploadBytes,(float) (MyData.uploadedBytes+numBytes)/MyData.totalUploadBytes,speed);
+                PopupUtil.update(uploadedBytes+numBytes,totalUploadBytes,(float) (uploadedBytes+numBytes)/totalUploadBytes,speed);
 //                uploadProgress.setProgress((int) (100 * percent));
 //                uploadInfo.setText("numBytes:" + numBytes + " bytes" + "\ntotalBytes:" + totalBytes + " bytes" + "\npercent:" + percent * 100 + " %" + "\nspeed:" + speed * 1000 / 1024 / 1024 + "  MB/秒");
 
@@ -127,9 +144,9 @@ public class UploadUtil {
             public void onUIProgressFinish(long totalBytes) {
                 super.onUIProgressFinish(totalBytes);
 //                PopupUtil.forceDismissPopup();
-                MyData.uploadedBytes= MyData.uploadedBytes+totalBytes;
-                MyData.uploadingFiles.remove(0);
-                uploading(context);
+                uploadedBytes= uploadedBytes+totalBytes;
+                uploadingFiles.remove(0);
+                uploading();
                 Log.e("TAG", "onUIProgressFinish:");
 //                Toast.makeText(getApplicationContext(), "结束上传", Toast.LENGTH_SHORT).show();
             }
@@ -144,7 +161,7 @@ public class UploadUtil {
                 Log.e("TAG", "=============onFailure===============");
                 e.printStackTrace();
                 if (!isCanceled) {
-                    uploading(context);
+                    uploading();
                 }
             }
 
@@ -158,21 +175,7 @@ public class UploadUtil {
         });
     }
 
-    public static void startUpload(Context context,final OnCompleteListener listener){
-        UploadUtil.listener = listener;
-        isCanceled = false;
 
-        uploading(context);
-    }
-    public static void cancel(){
-        if (call!=null) {
-            call.cancel();
-        }
-        isCanceled = true;
-        okHttpClient = null;
-        call = null;
-        MyData.uploadingFiles = null;
-    }
     public interface OnCompleteListener{
         void complete();
     }

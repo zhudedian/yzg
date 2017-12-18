@@ -7,9 +7,6 @@ import android.view.View;
 import com.ider.yzg.R;
 import com.ider.yzg.view.ConfirmPopu;
 
-import static android.R.attr.id;
-import static android.R.attr.track;
-
 /**
  * Created by Eric on 2017/12/14.
  */
@@ -18,6 +15,7 @@ public class PopupUtil {
 
     private static ConfirmPopup confirmPopup;
     private static ProgressPopup progressPopup;
+    private static EditPopup editPopup;
     public static ConfirmPopup buildConfirmPopup(Context context, String titleStr, String noticeStr, String okStr,
                                                String cancelStr, boolean outsideTouchable, ConfirmPopu.OnOkListener listener){
         confirmPopup = new ConfirmPopup(context,titleStr,noticeStr,okStr,cancelStr,outsideTouchable,listener);
@@ -25,8 +23,8 @@ public class PopupUtil {
     }
     public static ConfirmPopup getDeleteConfirmPopup(Context context,String noticeStr,ConfirmPopu.OnOkListener listener){
         confirmPopup = new ConfirmPopup(context, context.getResources().getString(R.string.popup_remove_title),
-                noticeStr, context.getResources().getString(R.string.popup_ok_button),
-                context.getResources().getString(R.string.popup_cancel_button), true,listener);
+                noticeStr, context.getResources().getString(R.string.popup_delete_ok_button),
+                context.getResources().getString(R.string.popup_delete_cancel_button), true,listener);
         return confirmPopup;
     }
     public static ConfirmPopup getOverConfirmPopup(Context context,String noticeStr,String checkStr,ConfirmPopu.OnOkListener listener){
@@ -39,6 +37,21 @@ public class PopupUtil {
     public static ProgressPopup getUploadPopup(Context context,ProgressPopup.OnCancelListener listener){
         progressPopup = new ProgressPopup(context,context.getString(R.string.popup_upload_title),false,listener);
         return progressPopup;
+    }
+    public static ProgressPopup getDownloadPopup(Context context,ProgressPopup.OnCancelListener listener){
+        progressPopup = new ProgressPopup(context,context.getString(R.string.popup_download_title),false,listener);
+        return progressPopup;
+    }
+    public static EditPopup getEditPopup(Context context,String editStr,EditPopup.OnOkListener listener){
+        editPopup = new EditPopup(context,context.getResources().getString(R.string.popup_ok_button),editStr,
+                context.getResources().getString(R.string.popup_ok_button),
+                context.getResources().getString(R.string.popup_cancel_button),true,listener);
+        return editPopup;
+    }
+    public static void setDownloadTitle(String title){
+        if (progressPopup!=null){
+            progressPopup.setTitle(title);
+        }
     }
     public static boolean isPopupShow(){
         if (confirmPopup!=null) {
@@ -86,6 +99,11 @@ public class PopupUtil {
                 progressPopup.dismiss();
                 progressPopup= null;
             }
+        }else if(editPopup!=null&& editPopup.isShowing()){
+            if (editPopup.isCancelable()) {
+                editPopup.dismiss();
+                editPopup= null;
+            }
         }
     }
     public static void forceDismissPopup() {
@@ -95,6 +113,10 @@ public class PopupUtil {
         }else if(progressPopup!=null&& progressPopup.isShowing()){
             progressPopup.dismiss();
             progressPopup= null;
+
+        }else if(editPopup!=null&& editPopup.isShowing()){
+            editPopup.dismiss();
+            editPopup= null;
 
         }
 
