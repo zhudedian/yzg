@@ -100,12 +100,10 @@ public class EditPopup {
     }
     public void show(View parent){
         popupWindow.showAtLocation(parent, Gravity.CENTER,0,0);
-        listener.showImm(editText);
     }
 
 
     public interface OnOkListener{
         void onOkClick(boolean isOk,String editStr);
-        void showImm(View view);
     }
 }

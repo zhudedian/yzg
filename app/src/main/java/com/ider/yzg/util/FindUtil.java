@@ -113,11 +113,14 @@ public class FindUtil {
     private static void handResult(String savePath ,String result,List<BoxFile> list) {
         if (result.equals("null")) {
             findList.remove(0);
-            new File(savePath).mkdirs();
+//            new File(savePath).mkdirs();
             addNoDirFile(list);
             return;
         }
         String[] files = result.split("\"type=\"");
+        if(files.length==1){
+            new File(savePath).mkdirs();
+        }
         for (int i = 1; i < files.length; i++) {
             String[] fils = files[i].split("\"name=\"");
             int type = Integer.parseInt(fils[0]);

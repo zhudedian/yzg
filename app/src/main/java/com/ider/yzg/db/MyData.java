@@ -31,7 +31,6 @@ public class MyData {
     public static List<BoxFile> boxFiles = new ArrayList<>();
     public static List<BoxFile> selectBoxFiles = new ArrayList<>();
     public static List<BoxFile> hideFiles;
-    public static List<BoxFile> copingFiles = new ArrayList<>();
     public static String boxFilePath="";
     public static String picIconSavePath;
     public static String screenshotSavePath;
@@ -41,6 +40,8 @@ public class MyData {
 
     public final static String NORMAL = "normal";
     public final static String TRANS = "trans";
+    public final static String RENAME = "rename";
+    public final static String COPY = "copy";
     public final static String SELECT = "select";
 
 }

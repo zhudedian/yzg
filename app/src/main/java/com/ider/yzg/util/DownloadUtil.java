@@ -60,12 +60,12 @@ public class DownloadUtil {
         if (downLoadingFiles.size()>0){
             download(downLoadingFiles.get(0));
         }else {
-            PopupUtil.forceDismissPopup();
-            okHttpClient = null;
-            call = null;
-            downLoadingFiles = null;
-            listener.complete();
-        }
+
+        }PopupUtil.forceDismissPopup();
+        okHttpClient = null;
+        call = null;
+        downLoadingFiles = null;
+        listener.complete();
     }
 
     private static void download(final BoxFile boxFile) {

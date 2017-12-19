@@ -185,6 +185,7 @@ public class OperateBar extends LinearLayout {
         move.setSelect(true);
     }
     public void showCopyMenu(){
+        setVisibility(VISIBLE);
         allcheck.setVisibility(GONE);
         copy.setVisibility(VISIBLE);
         remove.setVisibility(GONE);
