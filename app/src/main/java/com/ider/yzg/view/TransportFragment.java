@@ -203,14 +203,7 @@ public class TransportFragment extends Fragment implements View.OnClickListener,
                         } else {
                             MyData.selectBoxFiles.add(boxFile);
                         }
-                        if (MyData.selectBoxFiles.size()==0){
-                            operateBar.showNoCheckMenu();
-                        }else if (MyData.selectBoxFiles.size()==1){
-                            operateBar.showOneCheckMenu();
-                        }else {
-                            operateBar.showMoreCheckMenu();
-                        }
-                        boxAdapter.notifyDataSetChanged();
+                        notifyChanged();
                     }
                 }else {
                     BoxFile boxFile = moFiles.get(position);
@@ -231,14 +224,7 @@ public class TransportFragment extends Fragment implements View.OnClickListener,
                         }else {
                             moSelectFiles.add(boxFile);
                         }
-                        if (moSelectFiles.size()==0){
-                            operateBar.showNoCheckMenu();
-                        }else if (moSelectFiles.size()==1){
-                            operateBar.showOneCheckMenu();
-                        }else {
-                            operateBar.showMoreCheckMenu();
-                        }
-                        adapter.notifyDataSetChanged();
+                        notifyChanged();
                     }
                 }
             }
@@ -248,6 +234,7 @@ public class TransportFragment extends Fragment implements View.OnClickListener,
             public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
                 MyData.isShowCheck = true;
                 operateBar.setVisibility(View.VISIBLE);
+                operateBar.setAllcheck(false);
                 operateBar.showNoCheckMenu();
                 if (page==1){
                     boxAdapter.notifyDataSetChanged();
@@ -267,15 +254,7 @@ public class TransportFragment extends Fragment implements View.OnClickListener,
                 }else if (isTrans){
                     trans();
                 }else if (isCancel){
-                    if (page ==1){
-                        MyData.disPlayMode = MyData.NORMAL;
-                        page = 2;
-                        initView();
-                    }else {
-                        MyData.disPlayMode = MyData.NORMAL;
-                        page = 1;
-                        initView();
-                    }
+                    cancel();
                 }else if (isRename){
                     if (page==1) {
                         showRenameEditPopup(MyData.selectBoxFiles.get(0));
@@ -286,6 +265,8 @@ public class TransportFragment extends Fragment implements View.OnClickListener,
                     }
                 }else if (isCopy){
                     copy();
+                }else if(isAllCheck){
+                    allCheck();
                 }
             }
         });
@@ -358,6 +339,27 @@ public class TransportFragment extends Fragment implements View.OnClickListener,
             }
         }
     }
+    private void notifyChanged(){
+        if (page == 1){
+            if (MyData.selectBoxFiles.size()==0){
+                operateBar.showNoCheckMenu();
+            }else if (MyData.selectBoxFiles.size()==1){
+                operateBar.showOneCheckMenu();
+            }else {
+                operateBar.showMoreCheckMenu();
+            }
+            boxAdapter.notifyDataSetChanged();
+        }else {
+            if (moSelectFiles.size()==0){
+                operateBar.showNoCheckMenu();
+            }else if (moSelectFiles.size()==1){
+                operateBar.showOneCheckMenu();
+            }else {
+                operateBar.showMoreCheckMenu();
+            }
+            adapter.notifyDataSetChanged();
+        }
+    }
     @Override
     public void onClick(View view) {
         switch (view.getId()) {
@@ -417,7 +419,7 @@ public class TransportFragment extends Fragment implements View.OnClickListener,
             return;
         }
         isIniting = true;
-        //progressBar.setVisibility(View.VISIBLE);
+        progressBar.setVisibility(View.VISIBLE);
         if (page == 1) {
             if (MyData.isConnect) {
                 final String comment = changeToUnicode(MyData.boxFilePath);
@@ -465,7 +467,7 @@ public class TransportFragment extends Fragment implements View.OnClickListener,
                         CopyUtil.cancel();
                         PopupUtil.forceDismissPopup();
                         MyData.disPlayMode = MyData.NORMAL;
-                        initView();
+                        init();
                     }
                 }).show(listView);
                 FindUtil.findNoDirDownloadBoxFile(list, new FindUtil.FindCompleteListener() {
@@ -474,6 +476,7 @@ public class TransportFragment extends Fragment implements View.OnClickListener,
                         CopyUtil.startCopyTvFile(list, totalBytes, new CopyUtil.OnCompleteListener() {
                             @Override
                             public void complete() {
+                                progressBar.setVisibility(View.VISIBLE);
                                 MyData.disPlayMode = MyData.NORMAL;
                                 operateBar.setVisibility(View.GONE);
                                 Handler handler = new Handler();
@@ -688,6 +691,42 @@ public class TransportFragment extends Fragment implements View.OnClickListener,
                 }
             }
         }).show(listView);
+    }
+    private void allCheck(){
+        if (page==1) {
+            if (operateBar.isAllCheck()) {
+                operateBar.setAllcheck(false);
+                MyData.selectBoxFiles.clear();
+            } else {
+                operateBar.setAllcheck(true);
+                MyData.selectBoxFiles.addAll(MyData.boxFiles);
+            }
+        }else {
+            if (operateBar.isAllCheck()) {
+                operateBar.setAllcheck(false);
+                moSelectFiles.clear();
+            } else {
+                operateBar.setAllcheck(true);
+                moSelectFiles.addAll(moFiles);
+            }
+        }
+        notifyChanged();
+    }
+    private void cancel(){
+        if (MyData.disPlayMode.equals(MyData.TRANS)) {
+            if (page == 1) {
+                MyData.disPlayMode = MyData.NORMAL;
+                page = 2;
+                initView();
+            } else {
+                MyData.disPlayMode = MyData.NORMAL;
+                page = 1;
+                initView();
+            }
+        }else if (MyData.disPlayMode.equals(MyData.COPY)){
+            MyData.disPlayMode = MyData.NORMAL;
+            init();
+        }
     }
     private void copy() {
         if (MyData.disPlayMode.equals(MyData.NORMAL)){

@@ -83,7 +83,7 @@ public class ItemOpMenu extends LinearLayout {
                 text.setTextColor(getResources().getColor(R.color.item_menu_select));
                 image.setImageResource(R.drawable.ic_allcheck_select);
             }else {
-                text.setTextColor(getResources().getColor(R.color.item_menu_unselect));
+                text.setTextColor(getResources().getColor(R.color.item_menu_select));
                 image.setImageResource(R.drawable.ic_allcheck_unselect);
             }
             text.setText(R.string.item_allcheck);

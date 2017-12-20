@@ -18,6 +18,7 @@ public class OperateBar extends LinearLayout {
 
     private Context context;
     private OnMenuClickListener listener;
+    private boolean isAllCheck;
     private ItemOpMenu cancel,newcreate,trans,move,rename,remove,copy,allcheck;
 
     public OperateBar(Context context) {
@@ -103,10 +104,13 @@ public class OperateBar extends LinearLayout {
 
     public void setAllcheck(boolean allCheck){
         if (allCheck) {
-            allcheck.setSelect(false);
-        }else {
             allcheck.setSelect(true);
+        }else {
+            allcheck.setSelect(false);
         }
+    }
+    public boolean isAllCheck(){
+        return allcheck.isSelect();
     }
 
     public void showNoCheckMenu(){
@@ -119,7 +123,6 @@ public class OperateBar extends LinearLayout {
         newcreate.setVisibility(GONE);
         cancel.setVisibility(GONE);
 
-        allcheck.setSelect(false);
         copy.setSelect(false);
         remove.setSelect(false);
         rename.setSelect(false);
@@ -137,7 +140,6 @@ public class OperateBar extends LinearLayout {
         newcreate.setVisibility(GONE);
         cancel.setVisibility(GONE);
 
-        allcheck.setSelect(false);
         copy.setSelect(true);
         remove.setSelect(true);
         rename.setSelect(true);
@@ -154,7 +156,6 @@ public class OperateBar extends LinearLayout {
         newcreate.setVisibility(GONE);
         cancel.setVisibility(GONE);
 
-        allcheck.setSelect(false);
         copy.setSelect(true);
         remove.setSelect(true);
         move.setSelect(true);

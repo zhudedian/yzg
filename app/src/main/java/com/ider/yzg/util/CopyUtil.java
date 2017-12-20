@@ -37,11 +37,14 @@ public class CopyUtil {
     private static BoxFile boxFile;
     private static long lastRefreshTime = 0L;
     private static long lastBytesWritten = 0L;
-    private static long minTime = 100;
+    private static long minTime = 1000;
+    private static int repeatCount;
+    private static int maxRepeat = 40;
     private static long totalCopyBytes;
     private static long copyBytes;
     private static boolean isCanceled,isComplete;
     private static boolean isAddCopyBytes;
+    private static boolean isUpdateUI;
 
     public static void startCopyTvFile(List<BoxFile> list, long totalBytes, OnCompleteListener listener){
         CopyUtil.listener = listener;
@@ -51,8 +54,29 @@ public class CopyUtil {
         totalCopyBytes = totalBytes;
         copyBytes = 0;
         okHttpClient = new OkHttpClient.Builder().connectTimeout(20, TimeUnit.SECONDS).readTimeout(60, TimeUnit.SECONDS).build();
-        copying();
-        requestCopyByte();
+        RequestUtil.requestWithComment("\"startCopyFile\"", new RequestUtil.HandleResult() {
+            @Override
+            public void resultHandle(String result) {
+                if (result.equals("success")){
+                    copying();
+                    new Thread(){
+                        @Override
+                        public void run(){
+                            while (!isCanceled&&!isComplete){
+                                try {
+                                    Thread.sleep(1000);
+                                } catch (InterruptedException e) {
+                                    e.printStackTrace();
+                                }
+                                requestCopyByte();
+                            }
+                        }
+                    }.start();
+
+                }
+            }
+        });
+
     }
 
     private static void copying(){
@@ -69,6 +93,8 @@ public class CopyUtil {
 
     private static void copy(final BoxFile boxFile){
         CopyUtil.boxFile = boxFile;
+        PopupUtil.setFileName(boxFile.getFileName());
+        repeatCount = 0;
         String str = "\"copyFile=\"" + boxFile.getFilePath() + "\"newPath=\"" + boxFile.getSavePath() + File.separator + boxFile.getFileName();
         final String comment = StringUtil.changeToUnicode(str);
         RequestUtil.requestWithComment(comment, new RequestUtil.HandleResult() {
@@ -87,13 +113,15 @@ public class CopyUtil {
         });
         isCanceled = true;
     }
-
     private static void requestCopyByte(){
+        request("\"copyByte\"");
+    }
+    private static void request(final String comment){
         new Thread() {
             @Override
             public void run() {
                 try {
-                    Request request = new Request.Builder().header("comment","\"copyByte\"")
+                    Request request = new Request.Builder().header("comment",comment)
                             .url(MyData.downUrl).build();
                     Call call = okHttpClient.newCall(request);
                     Response response = call.execute();
@@ -114,43 +142,56 @@ public class CopyUtil {
     }
     public static void updateUI(String result){
         if (!isCanceled&&!isComplete) {
-            Log.i("result",result);
-            if (result.equals("success")){
-                copyingFiles.remove(0);
-                copying();
-                copyBytes += boxFile.getFileSize();
-                lastBytesWritten = 0;
-                lastRefreshTime = System.currentTimeMillis();
-                requestCopyByte();
+            Log.i("result",result+"copyBytes+boxFile.getSize"+(copyBytes+boxFile.getFileSize()));
+            if (result.equals("")){
+//                requestCopyByte();
                 return;
             }
-            long numBytes = Long.parseLong(result);
-            long currentTime = System.currentTimeMillis();
-            if (currentTime - lastRefreshTime >= minTime) {
-                long intervalTime = (currentTime - lastRefreshTime);
-                if (intervalTime == 0) {
-                    intervalTime += 1;
-                }
-                long updateBytes = numBytes - lastBytesWritten;
-                if (updateBytes <= 0) {
-                    lastBytesWritten = numBytes;
-                    lastRefreshTime = System.currentTimeMillis();
+            if (result.equals("success")){
+//                copyingFiles.remove(0);
+//                copying();
+//                requestCopyByte();
+                return;
+            }else if (result.equals("failed")){
+//                copying();
+//                requestCopyByte();
+                return;
+            }
+            if (result.contains("\"copyByte=\"")) {
+                result = result.replace("\"copyByte=\"","");
+                long numBytes = Long.parseLong(result);
+                if (numBytes>=(copyBytes+boxFile.getFileSize())){
+                    copyingFiles.remove(0);
+                    copyBytes = numBytes;
+                    copying();
                     return;
                 }
-                final long copySpeed = updateBytes / intervalTime * 1000;
-                PopupUtil.update(copyBytes + numBytes, totalCopyBytes, (float) (copyBytes + numBytes) / totalCopyBytes, copySpeed);
-                lastRefreshTime = System.currentTimeMillis();
-                lastBytesWritten = numBytes;
-                requestCopyByte();
-                return;
+                long currentTime = System.currentTimeMillis();
+                if (currentTime - lastRefreshTime >= minTime) {
+                    long intervalTime = (currentTime - lastRefreshTime);
+                    if (intervalTime == 0) {
+                        intervalTime += 1;
+                    }
+                    long updateBytes = numBytes - lastBytesWritten;
+                    if (updateBytes==0){
+                        repeatCount++;
+                        if (repeatCount>=maxRepeat){
+                            repeatCount = 0;
+                            copying();
+                        }
+                    }else {
+                        repeatCount = 0;
+                    }
+                    final long copySpeed = updateBytes / intervalTime * 1000;
+                    if (!isComplete && !isCanceled) {
+                        PopupUtil.update(numBytes, totalCopyBytes, (float) numBytes / totalCopyBytes, copySpeed);
+                    }
+                    lastRefreshTime = System.currentTimeMillis();
+                    lastBytesWritten = numBytes;
+                    return;
+                }
             }
 
-            try {
-                Thread.sleep(100);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-            requestCopyByte();
         }
     }
     private static Handler mHandler = new Handler(Looper.getMainLooper()){
@@ -162,7 +203,11 @@ public class CopyUtil {
                     if (data == null) {
                         return;
                     }
-                    CopyUtil.updateUI(data.getString("result"));
+                    if (!isUpdateUI) {
+                        isUpdateUI = true;
+                        CopyUtil.updateUI(data.getString("result"));
+                        isUpdateUI = false;
+                    }
                     break;
                 case 1:
 
@@ -201,7 +246,6 @@ public class CopyUtil {
             PopupUtil.update(copyBytes , totalCopyBytes, (float) copyBytes / totalCopyBytes, copySpeed);
             lastRefreshTime = System.currentTimeMillis();
             lastBytesWritten = copyBytes;
-            requestCopyByte();
             return;
         }
     }
