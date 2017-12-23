@@ -122,6 +122,20 @@ public class FileUtil {
         }
         return "";
     }
+    public static long getLTime(File file){
+        if (file.exists()) {
+            long time = file.lastModified();
+
+            return time;
+        }
+        return 0;
+    }
+    public static String getSTime(long time){
+        SimpleDateFormat formatter = new
+                SimpleDateFormat("yyyy-MM-dd HH:mm");
+        String result = formatter.format(time);
+        return result;
+    }
     public static String getFileCount(File file){
         if (file.isDirectory()){
             File[] files = file.listFiles();

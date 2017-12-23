@@ -493,7 +493,7 @@ public class AppsFragment extends Fragment implements View.OnClickListener,Fragm
                 String[] f2 = f[1].split("\"verN=\"");
                 int verC = Integer.parseInt(f2[0]);
                 String verN = f2[1];
-                //Log.i(TAG, "pckn=" + pckn + "verC=" + verC);
+                Log.i(TAG, "pckn=" + pckn + "verC=" + verC);
                 TvApp app = new TvApp(type, label, pckn, verC, verN);
                 if (isDataSave)
                 DataSupport.deleteAll(TvApp.class, "packageName = ?", app.getPackageName());

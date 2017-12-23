@@ -22,13 +22,11 @@ import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
 
-
 /**
- * Created by Eric on 2017/12/19.
+ * Created by Eric on 2017/12/22.
  */
 
-public class CopyUtil {
-
+public class MoveUtil {
     private static OnCompleteListener listener;
     private static OkHttpClient okHttpClient;
     private static List<BoxFile> copyingFiles;
@@ -44,8 +42,8 @@ public class CopyUtil {
     private static boolean isAddCopyBytes;
     private static boolean isUpdateUI;
 
-    public static void startCopyTvFile(List<BoxFile> list, long totalBytes, OnCompleteListener listener){
-        CopyUtil.listener = listener;
+    public static void startCutTvFile(List<BoxFile> list, long totalBytes, OnCompleteListener listener){
+        MoveUtil.listener = listener;
         isCanceled = false;
         isComplete = false;
         copyingFiles = list;
@@ -56,7 +54,7 @@ public class CopyUtil {
             @Override
             public void resultHandle(String result) {
                 if (result.equals("success")){
-                    copying();
+                    cuting();
                     new Thread(){
                         @Override
                         public void run(){
@@ -77,9 +75,9 @@ public class CopyUtil {
 
     }
 
-    private static void copying(){
+    private static void cuting(){
         if (copyingFiles.size()>0){
-            copy(copyingFiles.get(0));
+            cut(copyingFiles.get(0));
         }else {
             PopupUtil.forceDismissPopup();
             copyingFiles = null;
@@ -89,17 +87,70 @@ public class CopyUtil {
         }
     }
 
-    private static void copy(final BoxFile boxFile){
-        CopyUtil.boxFile = boxFile;
+    private static void cut(final BoxFile boxFile){
+        MoveUtil.boxFile = boxFile;
         PopupUtil.setFileName(boxFile.getFileName());
         PopupUtil.update(copyBytes, totalCopyBytes, (float) copyBytes / totalCopyBytes, 0);
         repeatCount = 0;
-        String str = "\"copyFile=\"" + boxFile.getFilePath() + "\"newPath=\"" + boxFile.getSavePath() + File.separator + boxFile.getFileName();
+        String str = "\"cutFile=\"" + boxFile.getFilePath() + "\"newPath=\"" + boxFile.getSavePath() + File.separator + boxFile.getFileName();
         final String comment = StringUtil.changeToUnicode(str);
         RequestUtil.requestWithComment(comment, new RequestUtil.HandleResult() {
             @Override
             public void resultHandle(String result) {
 
+            }
+        });
+    }
+    public static void startMoveTvFile(List<BoxFile> list, long totalBytes, OnCompleteListener listener){
+        MoveUtil.listener = listener;
+        isCanceled = false;
+        isComplete = false;
+        copyingFiles = list;
+        totalCopyBytes = totalBytes;
+        copyBytes = 0;
+        okHttpClient = new OkHttpClient.Builder().connectTimeout(20, TimeUnit.SECONDS).readTimeout(60, TimeUnit.SECONDS).build();
+        RequestUtil.requestWithComment("\"startCopyFile\"", new RequestUtil.HandleResult() {
+            @Override
+            public void resultHandle(String result) {
+                if (result.equals("success")){
+                    moveing();
+                }
+            }
+        });
+
+    }
+
+    private static void moveing(){
+        if (copyingFiles.size()>0){
+            move(copyingFiles.get(0));
+        }else {
+            PopupUtil.forceDismissPopup();
+            copyingFiles = null;
+            isComplete = true;
+            okHttpClient =null;
+            listener.complete();
+        }
+    }
+
+    private static void move(final BoxFile boxFile){
+        MoveUtil.boxFile = boxFile;
+        PopupUtil.setFileName(boxFile.getFileName());
+        PopupUtil.update(copyBytes, totalCopyBytes, (float) copyBytes / totalCopyBytes, 0);
+        repeatCount = 0;
+        String str = "\"moveFile=\"" + boxFile.getFilePath() + "\"newPath=\"" + boxFile.getSavePath() + File.separator + boxFile.getFileName();
+        final String comment = StringUtil.changeToUnicode(str);
+        RequestUtil.requestWithComment(comment, new RequestUtil.HandleResult() {
+            @Override
+            public void resultHandle(String result) {
+                if (!isCanceled&&!isComplete) {
+                    if (result.equals("success")) {
+                        copyingFiles.remove(0);
+                        copyBytes += boxFile.getFileSize();
+                        moveing();
+                    } else {
+                        moveing();
+                    }
+                }
             }
         });
     }
@@ -165,7 +216,7 @@ public class CopyUtil {
                 if (numBytes>=(copyBytes+boxFile.getFileSize())){
                     copyingFiles.remove(0);
                     copyBytes = numBytes;
-                    copying();
+                    cuting();
                     return;
                 }
                 long currentTime = System.currentTimeMillis();
@@ -179,7 +230,7 @@ public class CopyUtil {
                         repeatCount++;
                         if (repeatCount>=maxRepeat){
                             repeatCount = 0;
-                            copying();
+                            cuting();
                         }
                     }else {
                         repeatCount = 0;
@@ -207,7 +258,7 @@ public class CopyUtil {
                     }
                     if (!isUpdateUI) {
                         isUpdateUI = true;
-                        CopyUtil.updateUI(data.getString("result"));
+                        updateUI(data.getString("result"));
                         isUpdateUI = false;
                     }
                     break;
@@ -224,8 +275,8 @@ public class CopyUtil {
             }
         }
     };
-    public static void startCopyLocalFile(List<BoxFile> list, long totalBytes, OnCompleteListener listener){
-        CopyUtil.listener = listener;
+    public static void startCopyLocalFile(List<BoxFile> list, long totalBytes,OnCompleteListener listener){
+        MoveUtil.listener = listener;
         isCanceled = false;
         isComplete = false;
         copyingFiles = list;

@@ -39,7 +39,7 @@ public class OperateBar extends LinearLayout {
         cancel.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (listener!=null){
+                if (listener!=null&&cancel.isSelect()){
                     listener.onMenuClick(false,false,false,false,false,false,false,true);
                 }
             }
@@ -47,7 +47,7 @@ public class OperateBar extends LinearLayout {
         newcreate.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (listener!=null){
+                if (listener!=null&&newcreate.isSelect()){
                     listener.onMenuClick(false,false,false,false,false,false,true,false);
                 }
             }
@@ -55,7 +55,7 @@ public class OperateBar extends LinearLayout {
         trans.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (listener!=null){
+                if (listener!=null&&trans.isSelect()){
                     listener.onMenuClick(false,false,false,false,false,true,false,false);
                 }
             }
@@ -63,7 +63,7 @@ public class OperateBar extends LinearLayout {
         move.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (listener!=null){
+                if (listener!=null&&move.isSelect()){
                     listener.onMenuClick(false,false,false,false,true,false,false,false);
                 }
             }
@@ -71,7 +71,7 @@ public class OperateBar extends LinearLayout {
         rename.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (listener!=null){
+                if (listener!=null&&rename.isSelect()){
                     listener.onMenuClick(false,false,true,false,false,false,false,false);
                 }
             }
@@ -79,7 +79,7 @@ public class OperateBar extends LinearLayout {
         remove.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (listener!=null){
+                if (listener!=null&&remove.isSelect()){
                     listener.onMenuClick(false,false,false,true,false,false,false,false);
                 }
             }
@@ -87,7 +87,7 @@ public class OperateBar extends LinearLayout {
         copy.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (listener!=null){
+                if (listener!=null&&copy.isSelect()){
                     listener.onMenuClick(false,true,false,false,false,false,false,false);
                 }
             }
@@ -113,12 +113,16 @@ public class OperateBar extends LinearLayout {
         return allcheck.isSelect();
     }
 
-    public void showNoCheckMenu(){
+    public void showNoCheckMenu(boolean page1){
         allcheck.setVisibility(VISIBLE);
         copy.setVisibility(VISIBLE);
         remove.setVisibility(VISIBLE);
         rename.setVisibility(VISIBLE);
-        move.setVisibility(VISIBLE);
+        if (page1) {
+            move.setVisibility(VISIBLE);
+        }else {
+            move.setVisibility(GONE);
+        }
         trans.setVisibility(VISIBLE);
         newcreate.setVisibility(GONE);
         cancel.setVisibility(GONE);
@@ -130,12 +134,16 @@ public class OperateBar extends LinearLayout {
         trans.setSelect(false);
     }
 
-    public void showOneCheckMenu(){
+    public void showOneCheckMenu(boolean page1){
         allcheck.setVisibility(VISIBLE);
         copy.setVisibility(VISIBLE);
         remove.setVisibility(VISIBLE);
         rename.setVisibility(VISIBLE);
-        move.setVisibility(VISIBLE);
+        if (page1) {
+            move.setVisibility(VISIBLE);
+        }else {
+            move.setVisibility(GONE);
+        }
         trans.setVisibility(VISIBLE);
         newcreate.setVisibility(GONE);
         cancel.setVisibility(GONE);
@@ -146,12 +154,16 @@ public class OperateBar extends LinearLayout {
         move.setSelect(true);
         trans.setSelect(true);
     }
-    public void showMoreCheckMenu(){
+    public void showMoreCheckMenu(boolean page1){
         allcheck.setVisibility(VISIBLE);
         copy.setVisibility(VISIBLE);
         remove.setVisibility(VISIBLE);
         rename.setVisibility(GONE);
-        move.setVisibility(VISIBLE);
+        if (page1) {
+            move.setVisibility(VISIBLE);
+        }else {
+            move.setVisibility(GONE);
+        }
         trans.setVisibility(VISIBLE);
         newcreate.setVisibility(GONE);
         cancel.setVisibility(GONE);

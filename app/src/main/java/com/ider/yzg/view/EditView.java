@@ -81,6 +81,12 @@ public class EditView extends RelativeLayout {
         editText.setText(editStr);
         setVisibility(VISIBLE);
     }
+    public void show(String titleStr,OnOkClickListener listener){
+        this.listener = listener;
+        isShowing = true;
+        title.setText(titleStr);
+        setVisibility(VISIBLE);
+    }
     public EditText getEditTextView(){
         return editText;
     }

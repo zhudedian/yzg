@@ -17,9 +17,9 @@ public class BoxFile extends DataSupport {
 
     private String filePath;
 
-    private String createTime;
+    private long createTime;
     private String savePath;
-
+    private int fileCount;
     private long fileSize;
 
     public BoxFile(){
@@ -35,14 +35,14 @@ public class BoxFile extends DataSupport {
         this.filePath = filePath;
     }
 
-    public BoxFile(int types,String fileName,String createTime,long size,String filePath){
+    public BoxFile(int types,String fileName,long createTime,long size,String filePath){
         this.fileTypes = types;
         this.fileName = fileName;
         this.createTime = createTime;
         this.fileSize = size;
         this.filePath = filePath;
     }
-    public BoxFile(int types,String fileName,String createTime,long size,String filePath,String savePath){
+    public BoxFile(int types,String fileName,long createTime,long size,String filePath,String savePath){
         this.fileTypes = types;
         this.fileName = fileName;
         this.createTime = createTime;
@@ -89,6 +89,12 @@ public class BoxFile extends DataSupport {
         return fileTypes;
     }
 
+    public void setFileCount(int count){
+        this.fileCount = count;
+    }
+    public int getFileCount(){
+        return fileCount;
+    }
     public void setSelect(boolean selected){
         this.selected = selected;
     }
@@ -96,10 +102,10 @@ public class BoxFile extends DataSupport {
     public boolean isSelect(){
         return selected;
     }
-    public void setCreateTime(String createTime){
+    public void setCreateTime(long createTime){
         this.createTime = createTime;
     }
-    public String getCreateTime(){
+    public long getCreateTime(){
         return createTime;
     }
 

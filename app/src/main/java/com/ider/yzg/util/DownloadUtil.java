@@ -38,10 +38,13 @@ public class DownloadUtil {
     private static long totalDownloadBytes;
     private static long downloadedBytes;
     private static boolean isCanceled;
+    private static boolean isComplete;
 
     public static void startDownload(List<BoxFile> list,long totalBytes,final DownloadUtil.OnCompleteListener listener){
+        Log.i(TAG,"list.size()"+list.size());
         DownloadUtil.listener = listener;
         isCanceled = false;
+        isComplete = false;
         downLoadingFiles = list;
         totalDownloadBytes = totalBytes;
         downloadedBytes = 0;
@@ -60,12 +63,13 @@ public class DownloadUtil {
         if (downLoadingFiles.size()>0){
             download(downLoadingFiles.get(0));
         }else {
-
-        }PopupUtil.forceDismissPopup();
-        okHttpClient = null;
-        call = null;
-        downLoadingFiles = null;
-        listener.complete();
+            PopupUtil.forceDismissPopup();
+            okHttpClient = null;
+            call = null;
+            isComplete = true;
+            downLoadingFiles = null;
+            listener.complete();
+        }
     }
 
     private static void download(final BoxFile boxFile) {
@@ -124,8 +128,10 @@ public class DownloadUtil {
                     public void onUIProgressFinish(long totalBytes) {
                         super.onUIProgressFinish(totalBytes);
                         downloadedBytes= downloadedBytes+totalBytes;
-                        downLoadingFiles.remove(0);
-                        downloading();
+                        if (!isComplete&&!isCanceled) {
+                            downLoadingFiles.remove(0);
+                            downloading();
+                        }
 //                        Log.e("TAG", "onUIProgressFinish:");
 //                        Toast.makeText(getApplicationContext(), "结束下载", Toast.LENGTH_SHORT).show();
                     }

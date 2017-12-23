@@ -67,17 +67,24 @@ public class FileAdapter extends ArrayAdapter<BoxFile> {
         }
         viewHolder.name.setText(boxFile.getFileName());
 //        viewHolder.name.setMovementMethod(ScrollingMovementMethod.getInstance());
-        viewHolder.path.setText(boxFile.getCreateTime());
+        viewHolder.path.setText(FileUtil.getSTime(boxFile.getCreateTime()));
         viewHolder.size.setText(FileUtil.getSize(boxFile.getFileSize()));
-        if (boxFile.getFileType()==1){
-            if (boxFile.getFileSize()==0){
+            if (boxFile.getFileType()==0){
+                viewHolder.path.setText("可用："+FileUtil.getSize(boxFile.getCreateTime()));
+                viewHolder.size.setText("共："+FileUtil.getSize(boxFile.getFileSize()));
+                viewHolder.draw.setImageResource(R.drawable.item_usb);
+            }
+        else if (boxFile.getFileType()==1){
+            if (boxFile.getFileCount()==0){
                 viewHolder.size.setText(context.getResources().getString(R.string.empty_dir));
             }else {
-                viewHolder.size.setText(boxFile.getFileSize() + context.getResources().getString(R.string.file_count_end));
+                viewHolder.size.setText(boxFile.getFileCount() + context.getResources().getString(R.string.file_count_end));
             }
             if (resourceId==R.layout.file_list_item){
                 viewHolder.draw.setImageResource(R.drawable.item_dir);
+                viewHolder.move.setVisibility(View.GONE);
             }else {
+                viewHolder.move.setVisibility(View.VISIBLE);
                 viewHolder.draw.setImageResource(R.drawable.item_tvdir);
             }
         }else if (boxFile.getFileType()==2){
@@ -140,46 +147,42 @@ public class FileAdapter extends ArrayAdapter<BoxFile> {
         viewHolder.more_op.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                viewClick(v,boxFile);
+                listener.menuClick(boxFile,true,false,false,false,false,false);
             }
         });
         viewHolder.move.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                viewClick(v,boxFile);
+                listener.menuClick(boxFile,false,false,false,false,true,false);
             }
         });
         viewHolder.trans.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                viewClick(v,boxFile);
+                listener.menuClick(boxFile,false,false,false,false,false,true);
             }
         });
         viewHolder.rename.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                viewClick(v,boxFile);
+                listener.menuClick(boxFile,false,false,true,false,false,false);
             }
         });
         viewHolder.remove.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                viewClick(v,boxFile);
+                listener.menuClick(boxFile,false,false,false,true,false,false);
             }
         });
         viewHolder.copy.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                viewClick(v,boxFile);
+                listener.menuClick(boxFile,false,true,false,false,false,false);
             }
         });
 
     }
-    private void viewClick(View view,BoxFile boxFile){
-        if (listener!=null){
-            listener.menuClick(view,boxFile);
-        }
-    }
+
     class ViewHolder{
         ImageView draw,more_op;
         TextView name,size,path;
@@ -188,7 +191,8 @@ public class FileAdapter extends ArrayAdapter<BoxFile> {
         CheckBox checkBox;
     }
     public interface OnMenuOpClickListener{
-        void menuClick(View view,BoxFile boxFile);
+        void menuClick(BoxFile boxFile,boolean isOpOpen,boolean isCopy, boolean isRename, boolean isRemove,
+                       boolean isMove, boolean isTrans);
     }
     public void setOnMenuOpClickListener(FileAdapter.OnMenuOpClickListener clickListener){
         this.listener = clickListener;

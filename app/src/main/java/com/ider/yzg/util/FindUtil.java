@@ -12,6 +12,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static android.R.id.list;
+import static android.icu.lang.UCharacter.GraphemeClusterBreak.L;
 import static com.ider.yzg.util.SocketClient.mHandler;
 
 /**
@@ -91,23 +92,23 @@ public class FindUtil {
     }
     private static void addBoxFile(File f,String savePath,List<BoxFile> list){
         if (f.isDirectory()) {
-            list.add(new BoxFile(1, f.getName(),FileUtil.getTime(f), FileUtil.getFileLCount(f), f.getPath(),savePath));
+            list.add(new BoxFile(1, f.getName(),FileUtil.getLTime(f), FileUtil.getFileLCount(f), f.getPath(),savePath));
         } else if (FileUtil.getFileType(f).equals(FileUtil.str_video_type)) {
-            list.add(new BoxFile(2, f.getName(),FileUtil.getTime(f), FileUtil.getLSize(f), f.getPath(),savePath));
+            list.add(new BoxFile(2, f.getName(),FileUtil.getLTime(f), FileUtil.getLSize(f), f.getPath(),savePath));
         }else if (FileUtil.getFileType(f).equals(FileUtil.str_audio_type)){
-            list.add(new BoxFile(3, f.getName(), FileUtil.getTime(f),FileUtil.getLSize(f), f.getPath(),savePath));
+            list.add(new BoxFile(3, f.getName(), FileUtil.getLTime(f),FileUtil.getLSize(f), f.getPath(),savePath));
         }else if (FileUtil.getFileType(f).equals(FileUtil.str_image_type)){
-            list.add(new BoxFile(4, f.getName(), FileUtil.getTime(f),FileUtil.getLSize(f), f.getPath(),savePath));
+            list.add(new BoxFile(4, f.getName(), FileUtil.getLTime(f),FileUtil.getLSize(f), f.getPath(),savePath));
         }else if (FileUtil.getFileType(f).equals(FileUtil.str_apk_type)){
-            list.add(new BoxFile(5, f.getName(), FileUtil.getTime(f),FileUtil.getLSize(f), f.getPath(),savePath));
+            list.add(new BoxFile(5, f.getName(), FileUtil.getLTime(f),FileUtil.getLSize(f), f.getPath(),savePath));
         }else if (FileUtil.getFileType(f).equals(FileUtil.str_zip_type)){
-            list.add(new BoxFile(6, f.getName(),FileUtil.getTime(f), FileUtil.getLSize(f), f.getPath(),savePath));
+            list.add(new BoxFile(6, f.getName(),FileUtil.getLTime(f), FileUtil.getLSize(f), f.getPath(),savePath));
         }else if (FileUtil.getFileType(f).equals(FileUtil.str_pdf_type)){
-            list.add(new BoxFile(7, f.getName(),FileUtil.getTime(f), FileUtil.getLSize(f), f.getPath(),savePath));
+            list.add(new BoxFile(7, f.getName(),FileUtil.getLTime(f), FileUtil.getLSize(f), f.getPath(),savePath));
         }else if (FileUtil.getFileType(f).equals(FileUtil.str_txt_type)){
-            list.add(new BoxFile(8, f.getName(),FileUtil.getTime(f), FileUtil.getLSize(f), f.getPath(),savePath));
+            list.add(new BoxFile(8, f.getName(),FileUtil.getLTime(f), FileUtil.getLSize(f), f.getPath(),savePath));
         }else {
-            list.add(new BoxFile(9, f.getName(), FileUtil.getTime(f), FileUtil.getLSize(f), f.getPath(),savePath));
+            list.add(new BoxFile(9, f.getName(), FileUtil.getLTime(f), FileUtil.getLSize(f), f.getPath(),savePath));
         }
     }
     private static void handResult(String savePath ,String result,List<BoxFile> list) {
@@ -126,9 +127,23 @@ public class FindUtil {
             int type = Integer.parseInt(fils[0]);
             String[] fis = fils[1].split("\"size=\"");
             String[] fi = fis[1].split("\"time=\"");
-            long size = Long.parseLong(fi[0]);
-            Log.i(TAG,fis[0]);
-            BoxFile boxFile = new BoxFile(type, fis[0], fi[1], size, files[0] + File.separator + fis[0]);
+            long size=0;
+            long time =  Long.parseLong(fi[1]);
+//                Log.i(TAG,fis[0]);
+            BoxFile boxFile;
+            if (type==0){
+                String[] names = fis[0].split("\"path=\"");
+                size = Long.parseLong(fi[0]);
+                boxFile = new BoxFile(type, names[0],time, size, names[1]);
+            }else if (type==1){
+                String[] sizes = fi[0].split("\"count=\"");
+                size = Long.parseLong(sizes[0]);
+                boxFile = new BoxFile(type, fis[0], time, size, files[0] + "/" + fis[0]);
+                boxFile.setFileCount(Integer.parseInt(sizes[1]));
+            }else {
+                size = Long.parseLong(fi[0]);
+                boxFile = new BoxFile(type, fis[0], time, size, files[0] + "/" + fis[0]);
+            }
             boxFile.setSavePath(savePath);
             findList.add(boxFile);
         }

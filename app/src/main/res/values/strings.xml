@@ -45,6 +45,7 @@
     <string name="popup_upload_title">正在上传……</string>
     <string name="popup_download_title">正在下载……</string>
     <string name="popup_copy_title">正在复制……</string>
+    <string name="popup_move_title">正在移动……</string>
     <string name="popup_plan_download_title">准备下载</string>
     <string name="popup_ok_button">确定</string>
     <string name="popup_cancel_button">取消</string>
@@ -52,6 +53,9 @@
     <string name="popup_delete_cancel_button">容朕想想</string>
     <string name="popup_more_select_notice">%1$d个文件（夹）</string>
     <string name="edit_rename_title">请编辑文件名</string>
+    <string name="edit_create_title">请输入文件夹名</string>
+
+    <string name="notice_space_not_enough">空间不足！</string>
 
     <string name="def_path_info">/storage/emulated/0\"type=\"1\"name=\"Music\"size=\"13\"time=\"2017-12-14 06:08\"type=\"1\"name=\"
         Podcasts\"size=\"0\"time=\"2017-08-18 06:15\"type=\"1\"name=\"Ringtones\"size=\"0\"time=\"2017-08-18 06:15\"type=\"1\"name=\"

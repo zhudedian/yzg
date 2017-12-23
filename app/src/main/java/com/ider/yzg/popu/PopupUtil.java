@@ -46,6 +46,10 @@ public class PopupUtil {
         progressPopup = new ProgressPopup(context,context.getString(R.string.popup_copy_title),false,listener);
         return progressPopup;
     }
+    public static ProgressPopup getMovePopup(Context context,ProgressPopup.OnCancelListener listener){
+        progressPopup = new ProgressPopup(context,context.getString(R.string.popup_move_title),false,listener);
+        return progressPopup;
+    }
     public static EditPopup getEditPopup(Context context,String editStr,EditPopup.OnOkListener listener){
         editPopup = new EditPopup(context,context.getResources().getString(R.string.popup_ok_button),editStr,
                 context.getResources().getString(R.string.popup_ok_button),
