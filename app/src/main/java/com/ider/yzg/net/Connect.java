@@ -19,9 +19,11 @@ public class Connect {
     private static InetAddress address;
     private static MulticastSocket multicastSocket;
     private static Handler mHandler;
+    private static int connectCount ;
     private static boolean isOnBrodacastReceiver = false;
     public static void onBrodacastSend(Handler handler) {
         mHandler = handler;
+        connectCount = 0;
         MyData.isConnect = false;
         try {
             // 侦听的端口
@@ -31,7 +33,8 @@ public class Connect {
             new Thread(new Runnable() {
                 @Override
                 public void run() {
-                    while (!MyData.isConnect) {
+                    while (!MyData.isConnect&&connectCount<10) {
+                        connectCount++;
                         // 获取当前时间
                         //String time = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());
                         // 当前时间+标识后缀

@@ -8,6 +8,7 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import com.ider.yzg.MainActivity;
 import com.ider.yzg.R;
 
 /**
@@ -100,6 +101,15 @@ public class OperateBar extends LinearLayout {
                 }
             }
         });
+    }
+
+    public void setVisibility(int visibility){
+        super.setVisibility(visibility);
+        if (visibility == VISIBLE){
+            ((MainActivity)getContext()).setBottomLinearVisibility(false);
+        }else {
+            ((MainActivity)getContext()).setBottomLinearVisibility(true);
+        }
     }
 
     public void setAllcheck(boolean allCheck){

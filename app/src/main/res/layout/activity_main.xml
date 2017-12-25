@@ -22,40 +22,45 @@
             android:layout_height="0dp"
             android:layout_weight="1"
             android:visibility="gone"></FrameLayout>
-        <View
-            android:layout_width="match_parent"
-            android:layout_height="1dp"
-            android:background="#0e0e0e"></View>
         <LinearLayout
-            android:orientation="horizontal"
-            android:layout_width="match_parent"
-            android:layout_height="48dp">
-            <com.ider.yzg.view.BottomMenu
-                android:id="@+id/apps"
-                android:layout_width="0dp"
-                android:layout_height="match_parent"
-                android:layout_weight="1"
-                android:tag="1"/>
-            <com.ider.yzg.view.BottomMenu
-                android:id="@+id/remote"
-                android:layout_width="0dp"
-                android:layout_height="match_parent"
-                android:layout_weight="1"
-                android:tag="2"/>
-            <com.ider.yzg.view.BottomMenu
-                android:id="@+id/transmitter"
-                android:layout_width="0dp"
-                android:layout_height="match_parent"
-                android:layout_weight="1"
-                android:tag="3"/>
-            <com.ider.yzg.view.BottomMenu
-                android:id="@+id/tool"
-                android:layout_width="0dp"
-                android:layout_height="match_parent"
-                android:layout_weight="1"
-                android:tag="4"/>
+            android:id="@+id/bottom_linear"
+            android:orientation="vertical"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content">
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="#0e0e0e"></View>
+            <LinearLayout
+                android:orientation="horizontal"
+                android:layout_width="match_parent"
+                android:layout_height="48dp">
+                <com.ider.yzg.view.BottomMenu
+                    android:id="@+id/apps"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:tag="1"/>
+                <com.ider.yzg.view.BottomMenu
+                    android:id="@+id/remote"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:tag="2"/>
+                <com.ider.yzg.view.BottomMenu
+                    android:id="@+id/transmitter"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:tag="3"/>
+                <com.ider.yzg.view.BottomMenu
+                    android:id="@+id/tool"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:tag="4"/>
 
+            </LinearLayout>
         </LinearLayout>
-
     </LinearLayout>
 </RelativeLayout>

@@ -23,6 +23,7 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.ider.yzg.MainActivity;
 import com.ider.yzg.R;
 import com.ider.yzg.adapter.FileAdapter;
 import com.ider.yzg.db.BoxFile;
@@ -66,6 +67,7 @@ public class TransportFragment extends Fragment implements View.OnClickListener,
     private OperateBar operateBar;
     private TextView tvbox, mobile;
     private LinearLayout disConnectLinear,pathLinearView;
+    private TextView noticeText;
     private TextView pathTextView;
     private ProgressDialog progressDialog;
     private OkHttpClient okHttpClient;
@@ -96,6 +98,7 @@ public class TransportFragment extends Fragment implements View.OnClickListener,
         operateBar = (OperateBar)view.findViewById(R.id.operate_bar);
         disConnectLinear = (LinearLayout)view.findViewById(R.id.notice_linear_layout);
         pathLinearView = (LinearLayout)view.findViewById(R.id.path_linear_view);
+        noticeText = (TextView)view.findViewById(R.id.notice_text);
         pathTextView = (TextView)view.findViewById(R.id.path_text_view);
         tvbox = (TextView) view.findViewById(R.id.tvbox_button);
         mobile = (TextView) view.findViewById(R.id.mobile_button);
@@ -165,6 +168,7 @@ public class TransportFragment extends Fragment implements View.OnClickListener,
             disConnectLinear.setVisibility(View.GONE);
         }else {
             disConnectLinear.setVisibility(View.VISIBLE);
+            noticeText.setText(getString(R.string.disconnect_notice));
         }
         if (page==1){
             clickTvbox();
@@ -275,6 +279,14 @@ public class TransportFragment extends Fragment implements View.OnClickListener,
                                     boolean isMove, boolean isTrans, boolean isNewCreate, boolean isCancel) {
                 Log.i("menuOnClick", isAllCheck+","+isCopy+","+isRename+","+isRemove+","+isMove+","+isTrans+","+isNewCreate+","+isCancel);
                 operateBarOnClick(isAllCheck,isCopy,isRename,isRemove,isMove,isTrans,isNewCreate,isCancel);
+            }
+        });
+        disConnectLinear.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (!MyData.isConnect){
+                    ((MainActivity)getContext()).connecting();
+                }
             }
         });
 
@@ -859,7 +871,7 @@ public class TransportFragment extends Fragment implements View.OnClickListener,
                 page = 1;
                 initView();
             }
-        }else if (MyData.disPlayMode.equals(MyData.COPY)){
+        }else {
             MyData.disPlayMode = MyData.NORMAL;
             init();
         }
@@ -870,6 +882,8 @@ public class TransportFragment extends Fragment implements View.OnClickListener,
             MyData.isShowCheck = false;
             initView();
             operateBar.showMoveMenu();
+            disConnectLinear.setVisibility(View.VISIBLE);
+            noticeText.setText(getString(R.string.save_notice));
         }else {
             final List<BoxFile> list = new ArrayList<>();
             final List<BoxFile> overList = new ArrayList<>();
@@ -916,6 +930,8 @@ public class TransportFragment extends Fragment implements View.OnClickListener,
             MyData.isShowCheck = false;
             initView();
             operateBar.showCopyMenu();
+            disConnectLinear.setVisibility(View.VISIBLE);
+            noticeText.setText(getString(R.string.save_notice));
         }else {
             final List<BoxFile> list = new ArrayList<>();
             final List<BoxFile> overList = new ArrayList<>();
@@ -966,6 +982,8 @@ public class TransportFragment extends Fragment implements View.OnClickListener,
             }
             initView();
             operateBar.showTransMenu();
+            disConnectLinear.setVisibility(View.VISIBLE);
+            noticeText.setText(getString(R.string.save_notice));
         }else {
             final List<BoxFile> list = new ArrayList<>();
             final List<BoxFile> overList = new ArrayList<>();

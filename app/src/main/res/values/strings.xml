@@ -12,6 +12,7 @@
 
     <string name="disconnect_notice">您还没有绑定电视，点击去绑定</string>
     <string name="disconnect_notice2">未连接电视！</string>
+    <string name="save_notice">请选择要保存的路径</string>
     <string name="system_app_uninstall_notice">系统应该无法卸载！</string>
     <string name="file_count_end">个文件</string>
     <string name="empty_dir">空文件夹</string>

@@ -14,6 +14,7 @@ import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
+import android.widget.LinearLayout;
 import android.widget.Toast;
 
 import com.ider.yzg.db.MyData;
@@ -41,6 +42,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private AppsFragment appsFragment;
     private TransportFragment transportFragment;
     private FragmentInter fragmentInter;
+    private LinearLayout bottomLinear;
     private BottomMenu apps,remote,transmitter,tool;
 
     private int endCount;
@@ -54,6 +56,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         if (actionBar != null) {
             actionBar.hide();
         }
+        bottomLinear = (LinearLayout)findViewById(R.id.bottom_linear);
         apps = (BottomMenu)findViewById(R.id.apps);
         remote = (BottomMenu)findViewById(R.id.remote);
         transmitter = (BottomMenu)findViewById(R.id.transmitter);
@@ -98,6 +101,15 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         remote.performClick();
     }
 
+    public void setBottomLinearVisibility(boolean visibility){
+        if (visibility){
+            bottomLinear.setVisibility(View.VISIBLE);
+        }else {
+            bottomLinear.setVisibility(View.GONE);
+        }
+        viewpager.setScanScroll(visibility);
+    }
+
     private void setListener(){
         apps.setOnClickListener(this);
         remote.setOnClickListener(this);
@@ -107,6 +119,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     @Override
     public void onClick(View view){
+        if (!MyData.disPlayMode.equals(MyData.NORMAL)){
+            return;
+        }
         switch (view.getId()){
             case R.id.apps:
                 setDate(0);
@@ -175,8 +190,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     @Override
     protected void onResume(){
         super.onResume();
-        Connect.onBrodacastSend(mHandler);
+        connecting();
         init();
+    }
+    public void connecting(){
+        Connect.onBrodacastSend(mHandler);
     }
     private void init(){
 
