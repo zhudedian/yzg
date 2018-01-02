@@ -10,6 +10,7 @@ import com.ider.yzg.popu.PopupUtil;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -40,7 +41,7 @@ public class DownloadUtil {
     private static boolean isCanceled;
     private static boolean isComplete;
 
-    public static void startDownload(List<BoxFile> list,long totalBytes,final DownloadUtil.OnCompleteListener listener){
+    public static void startDownload(List<BoxFile> list,long totalBytes,OnCompleteListener listener){
         Log.i(TAG,"list.size()"+list.size());
         DownloadUtil.listener = listener;
         isCanceled = false;
@@ -71,7 +72,14 @@ public class DownloadUtil {
             listener.complete();
         }
     }
-
+    public static void download(BoxFile boxFile,OnCompleteListener listener){
+        DownloadUtil.listener = listener;
+        isCanceled = false;
+        isComplete = false;
+        downLoadingFiles = new ArrayList<>();
+        downLoadingFiles.add(boxFile);
+        downloading();
+    }
     private static void download(final BoxFile boxFile) {
 
         if (okHttpClient==null) {

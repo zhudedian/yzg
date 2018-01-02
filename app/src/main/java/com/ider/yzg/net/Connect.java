@@ -33,7 +33,7 @@ public class Connect {
             new Thread(new Runnable() {
                 @Override
                 public void run() {
-                    while (!MyData.isConnect&&connectCount<10) {
+                    while (!MyData.isConnect&&connectCount<5) {
                         connectCount++;
                         // 获取当前时间
                         //String time = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());

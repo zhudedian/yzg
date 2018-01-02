@@ -69,10 +69,12 @@ public class FileAdapter extends ArrayAdapter<BoxFile> {
 //        viewHolder.name.setMovementMethod(ScrollingMovementMethod.getInstance());
         viewHolder.path.setText(FileUtil.getSTime(boxFile.getCreateTime()));
         viewHolder.size.setText(FileUtil.getSize(boxFile.getFileSize()));
+            viewHolder.more_op.setVisibility(View.VISIBLE);
             if (boxFile.getFileType()==0){
                 viewHolder.path.setText("可用："+FileUtil.getSize(boxFile.getCreateTime()));
                 viewHolder.size.setText("共："+FileUtil.getSize(boxFile.getFileSize()));
                 viewHolder.draw.setImageResource(R.drawable.item_usb);
+                viewHolder.more_op.setVisibility(View.GONE);
             }
         else if (boxFile.getFileType()==1){
             if (boxFile.getFileCount()==0){

@@ -55,6 +55,7 @@ public class FindUtil {
         addNoDirFile(list);
     }
 
+
     private static void addNoDirFile(final List<BoxFile> list){
         if (findList.size()>0){
             final BoxFile boxFile = findList.get(0);
@@ -64,6 +65,15 @@ public class FindUtil {
                 RequestUtil.requestWithComment(comment, new RequestUtil.HandleResult() {
                     @Override
                     public void resultHandle(String result) {
+//                        String[] files = result.split("\"type=\"");
+//                        if(files.length==1){
+//                            if (result.equals("null")) {
+//                                findList.remove(0);
+//                                list.add(boxFile);
+//                                addNoDirFile(list);
+//                                return;
+//                            }
+//                        }
                         handResult(savePath+File.separator+boxFile.getFileName(),result,list);
                     }
                 });
@@ -80,6 +90,10 @@ public class FindUtil {
     private static void addNoDirFile(File file, String savePath,List<BoxFile> list){
         if (file.isDirectory()){
             File[] files = file.listFiles();
+            if (files==null||files.length==0){
+                addBoxFile(file,savePath,list);
+                return;
+            }
             for (File f:files){
                 if (f.isDirectory()){
                     addNoDirFile(f,savePath+File.separator+file.getName(),list);
@@ -112,16 +126,9 @@ public class FindUtil {
         }
     }
     private static void handResult(String savePath ,String result,List<BoxFile> list) {
-        if (result.equals("null")) {
-            findList.remove(0);
-//            new File(savePath).mkdirs();
-            addNoDirFile(list);
-            return;
-        }
+
         String[] files = result.split("\"type=\"");
-        if(files.length==1){
-            new File(savePath).mkdirs();
-        }
+
         for (int i = 1; i < files.length; i++) {
             String[] fils = files[i].split("\"name=\"");
             int type = Integer.parseInt(fils[0]);

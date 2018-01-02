@@ -27,6 +27,7 @@ import com.ider.yzg.view.BottomMenu;
 import com.ider.yzg.view.CustomViewPager;
 import com.ider.yzg.view.MyFragmentPagerAdapter;
 import com.ider.yzg.view.RemoteFragment;
+import com.ider.yzg.view.ToolFragment;
 import com.ider.yzg.view.TransportFragment;
 
 import java.util.ArrayList;
@@ -41,6 +42,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private RemoteFragment remoteFragment;
     private AppsFragment appsFragment;
     private TransportFragment transportFragment;
+    private ToolFragment toolFragment;
     private FragmentInter fragmentInter;
     private LinearLayout bottomLinear;
     private BottomMenu apps,remote,transmitter,tool;
@@ -65,12 +67,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         appsFragment = new AppsFragment();
         remoteFragment = new RemoteFragment();
         transportFragment = new TransportFragment();
+        toolFragment = new ToolFragment();
         //replaceFragment(remoteFragment);
         setListener();
 
         fragmentList.add(appsFragment);
         fragmentList.add(remoteFragment);
         fragmentList.add(transportFragment);
+        fragmentList.add(toolFragment);
         viewpager = (CustomViewPager)findViewById(R.id.view_pager);
         remoteFragment.setViewPager(viewpager);
         viewpager.setAdapter(new MyFragmentPagerAdapter(getSupportFragmentManager(),fragmentList));
@@ -137,6 +141,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 break;
             case R.id.tool:
                 setDate(3);
+                viewpager.setCurrentItem(3);
                 break;
         }
     }
@@ -179,11 +184,17 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
                 break;
             case 3:
-                apps.setSelect(false);
-                remote.setSelect(false);
-                transmitter.setSelect(false);
-                tool.setSelect(true);
-                currentItem = 3;
+                if (ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.READ_EXTERNAL_STORAGE)!= PackageManager.PERMISSION_GRANTED){
+                    ActivityCompat.requestPermissions(MainActivity.this,new String[]{Manifest.permission.READ_EXTERNAL_STORAGE},3);
+                }else {
+                    fragmentInter = toolFragment;
+                    fragmentInter.fragmentInit();
+                    apps.setSelect(false);
+                    remote.setSelect(false);
+                    transmitter.setSelect(false);
+                    tool.setSelect(true);
+                    currentItem = 3;
+                }
                 break;
         }
     }
@@ -272,6 +283,17 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
                 break;
             case 3:
+                if (grantResults.length>0&& grantResults[0] ==PackageManager.PERMISSION_GRANTED){
+                    fragmentInter = toolFragment;
+                    fragmentInter.fragmentInit();
+                    apps.setSelect(false);
+                    remote.setSelect(false);
+                    transmitter.setSelect(false);
+                    tool.setSelect(true);
+                    currentItem = 3;
+                }else {
+                    Toast.makeText(this,"You denied the permission",Toast.LENGTH_SHORT).show();
+                }
                 break;
 
             default:

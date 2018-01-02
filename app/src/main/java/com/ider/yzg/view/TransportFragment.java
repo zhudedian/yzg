@@ -50,6 +50,7 @@ import java.util.concurrent.TimeUnit;
 
 import okhttp3.OkHttpClient;
 
+import static android.R.id.list;
 import static com.ider.yzg.db.MyData.fileSelect;
 
 
@@ -258,16 +259,21 @@ public class TransportFragment extends Fragment implements View.OnClickListener,
         listView.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
             @Override
             public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
+                if (MyData.isShowCheck){
+                    return true;
+                }
                 MyData.isShowCheck = true;
                 operateBar.setVisibility(View.VISIBLE);
                 operateBar.setAllcheck(false);
                 if (page==1){
                     operateBar.showNoCheckMenu(true);
                     selectPath = MyData.boxFilePath;
+                    MyData.selectBoxFiles.clear();
                     boxAdapter.notifyDataSetChanged();
                 }else {
                     operateBar.showNoCheckMenu(false);
                     selectPath = MyData.fileSelect.getPath();
+                    moFiles.clear();
                     adapter.notifyDataSetChanged();
                 }
                 return true;
@@ -481,7 +487,7 @@ public class TransportFragment extends Fragment implements View.OnClickListener,
             create();
         }
     }
-    private void startMove(List<BoxFile> list){
+    private void startMove(final String filePath,List<BoxFile> list){
         operateBar.setVisibility(View.GONE);
         if(page == 1) {
             if (list.size() > 0) {
@@ -496,7 +502,7 @@ public class TransportFragment extends Fragment implements View.OnClickListener,
                 }).show(listView);
                 FindUtil.findNoDirDownloadBoxFile(list, new FindUtil.FindCompleteListener() {
                     @Override
-                    public void complete(long totalBytes, List<BoxFile> list) {
+                    public void complete(long totalBytes, final List<BoxFile> list) {
                         if (totalBytes>dirAvaSize){
                             PopupUtil.forceDismissPopup();
                             Toast.makeText(context,getString(R.string.notice_space_not_enough),Toast.LENGTH_SHORT).show();
@@ -520,6 +526,7 @@ public class TransportFragment extends Fragment implements View.OnClickListener,
                                             init();
                                         }
                                     }, 1000);
+                                    delete(filePath,list);
                                 }
                             });
                         }else {
@@ -536,6 +543,7 @@ public class TransportFragment extends Fragment implements View.OnClickListener,
                                             init();
                                         }
                                     }, 1000);
+                                    delete(filePath,list);
                                 }
                             });
                         }
@@ -735,7 +743,7 @@ public class TransportFragment extends Fragment implements View.OnClickListener,
                         }else if (MyData.disPlayMode.equals(MyData.COPY)){
                             startCopy(list);
                         }else if (MyData.disPlayMode.equals(MyData.MOVE)){
-                            startMove(list);
+                            startMove(MyData.boxFilePath,list);
                         }
                     }
                 }else {
@@ -759,7 +767,7 @@ public class TransportFragment extends Fragment implements View.OnClickListener,
                         }else if (MyData.disPlayMode.equals(MyData.COPY)){
                             startCopy(list);
                         }else if (MyData.disPlayMode.equals(MyData.MOVE)){
-                            startMove(list);
+                            startMove(MyData.boxFilePath,list);
                         }
                     }
                 }
@@ -826,7 +834,11 @@ public class TransportFragment extends Fragment implements View.OnClickListener,
             @Override
             public void onOkClick(boolean isOk, boolean isAllCheck) {
                 if (isOk){
-                    delete();
+                    if (page==1) {
+                        delete(MyData.boxFilePath,MyData.selectBoxFiles);
+                    }else {
+                        delete(MyData.fileSelect.getPath(),moSelectFiles);
+                    }
                     MyData.selectBoxFiles.clear();
                     moSelectFiles.clear();
                     PopupUtil.forceDismissPopup();
@@ -902,7 +914,7 @@ public class TransportFragment extends Fragment implements View.OnClickListener,
                 if (overList.size() > 0) {
                     showOverConfirmPopup(list,overList);
                 } else {
-                    startMove(list);
+                    startMove(MyData.boxFilePath,list);
                 }
             }else {
                 list.addAll(moSelectFiles);
@@ -919,7 +931,7 @@ public class TransportFragment extends Fragment implements View.OnClickListener,
                 if ( overList.size() > 0) {
                     showOverConfirmPopup(list,overList);
                 } else {
-                    startMove(list);
+                    startMove(MyData.boxFilePath,list);
                 }
             }
         }
@@ -1024,11 +1036,11 @@ public class TransportFragment extends Fragment implements View.OnClickListener,
             }
         }
     }
-    private void delete() {
+    private void delete(String filePath,List<BoxFile> list) {
         if (page==1) {
-            fileName = "\"delete=\"" + MyData.boxFilePath;
-            for (int i = 0; i < MyData.selectBoxFiles.size(); i++) {
-                fileName = fileName + "name=" + MyData.selectBoxFiles.get(i).getFileName();
+            fileName = "\"delete=\"" + filePath;
+            for (int i = 0; i < list.size(); i++) {
+                fileName = fileName + "name=" + list.get(i).getFileName();
             }
             final String comment = changeToUnicode(fileName);
             progressBar.setVisibility(View.VISIBLE);
@@ -1041,8 +1053,8 @@ public class TransportFragment extends Fragment implements View.OnClickListener,
                 }
             });
         }else {
-            for (int i=0;i<moSelectFiles.size();i++){
-                File file = new File(moSelectFiles.get(i).getFilePath());
+            for (int i=0;i<list.size();i++){
+                File file = new File(list.get(i).getFilePath());
                 if (file.isDirectory()&&file.exists()){
                     FileUtil.dirDelete(file);
                 }else {
