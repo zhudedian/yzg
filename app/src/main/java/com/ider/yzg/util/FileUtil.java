@@ -112,6 +112,12 @@ public class FileUtil {
 
         return type;
     }
+    public static boolean isImage(File file){
+        if (str_image_type.equals(getFileType(file))){
+            return true;
+        }
+        return false;
+    }
     public static String getTime(File file){
         if (file.exists()) {
             long time = file.lastModified();

@@ -206,7 +206,6 @@ public class AppsFragment extends Fragment implements View.OnClickListener,Fragm
             e.printStackTrace();
         }
         MyData.picIconSavePath = rootPath.endsWith(File.separator)?rootPath+"Ider/icon":rootPath+File.separator+"Ider/icon";
-        MyData.screenshotSavePath = rootPath.endsWith(File.separator)?rootPath+"Ider/Screenshot":rootPath+File.separator+"Ider/Screenshot";
     }
     private void setListener(){
         recommend.setOnClickListener(this);

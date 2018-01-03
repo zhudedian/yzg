@@ -9,6 +9,8 @@ import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.inputmethod.InputMethodManager;
+import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
@@ -16,12 +18,21 @@ import android.widget.TextView;
 
 import com.ider.yzg.R;
 import com.ider.yzg.db.MyData;
+import com.ider.yzg.util.EditChangeListener;
+import com.ider.yzg.util.FragmentInter;
+import com.ider.yzg.util.RequestUtil;
+
+import okhttp3.Call;
+import okhttp3.Request;
+import okhttp3.Response;
+
+import static android.R.string.ok;
 
 /**
  * Created by Eric on 2017/10/25.
  */
 
-public class RemoteFragment extends Fragment implements View.OnTouchListener,GestureDetector.OnGestureListener,View.OnClickListener{
+public class RemoteFragment extends Fragment implements FragmentInter,View.OnTouchListener,GestureDetector.OnGestureListener,View.OnClickListener{
 
     private String TAG = "RemoteFragment";
     private Context context;
@@ -29,6 +40,8 @@ public class RemoteFragment extends Fragment implements View.OnTouchListener,Ges
     private TextView push,touch;
     private LinearLayout touchLinear;
     private RelativeLayout pushRelative;
+    private EditView editView;
+    private InputMethodManager imm;
     private CustomViewPager viewPager;
     private ImageView center,up,down,left,right,power,setting,volumeUp,volumeDown,volumeMute,back,home,menu;
 
@@ -41,7 +54,7 @@ public class RemoteFragment extends Fragment implements View.OnTouchListener,Ges
     private String msg;
     public static String info,longinfo,lenth;
     private GestureDetector mygesture = new GestureDetector(this);
-
+    private String editTextOriginInfo;
     public int page = 1;
 
 
@@ -68,6 +81,8 @@ public class RemoteFragment extends Fragment implements View.OnTouchListener,Ges
         home = (ImageView)view.findViewById(R.id.home_button);
         menu = (ImageView)view.findViewById(R.id.menu_button);
 
+        editView = (EditView)view.findViewById(R.id.edit_view);
+
 
         return view;
     }
@@ -75,6 +90,7 @@ public class RemoteFragment extends Fragment implements View.OnTouchListener,Ges
     public void onActivityCreated(final Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
         context = getContext();
+        imm = (InputMethodManager) context.getSystemService(Context.INPUT_METHOD_SERVICE);
         setListener();
         push.performClick();
     }
@@ -84,6 +100,49 @@ public class RemoteFragment extends Fragment implements View.OnTouchListener,Ges
         if (page == 2){
             viewPager.setScanScroll(false);
         }
+    }
+    @Override
+    public void fragmentInit() {
+
+    }
+    @Override
+    public  void fragmentHandleMsg(String msg){
+        if (msg.contains("InOp")){
+            editView.show(context.getString(R.string.edit_write_title),new EditView.OnOkClickListener() {
+                @Override
+                public void click(boolean isOk, String editStr) {
+                    if (isOk) {
+                        RequestUtil.sendInfo(editStr);
+                    }else {
+                        RequestUtil.sendInfo(editTextOriginInfo);
+                    }
+                    MyData.client.sendMsg("cb ,,,,,,,,,,,,");
+                    editView.dismiss();
+                    imm.hideSoftInputFromWindow(editView.getWindowToken(), 0);
+                }
+            });
+            EditText editText = editView.getEditTextView();
+            editText.setFocusable(true);
+            editText.addTextChangedListener(new EditChangeListener());
+            editText.setFocusableInTouchMode(true);
+            editText.requestFocus();
+            imm.showSoftInput(editText, InputMethodManager.SHOW_FORCED);
+        }else if (msg.contains("InCl")){
+            editView.dismiss();
+            imm.hideSoftInputFromWindow(editView.getWindowToken(), 0);
+        }else if (msg.contains("InFo")){
+            RequestUtil.requestInfo(new RequestUtil.HandleResult() {
+                @Override
+                public void resultHandle(String result) {
+                    editView.setText(result);
+                    editTextOriginInfo = result;
+                }
+            });
+        }
+    }
+    public boolean fragmentBack(){
+
+        return false;
     }
     private void setListener(){
         push.setOnClickListener(this);
@@ -150,6 +209,9 @@ public class RemoteFragment extends Fragment implements View.OnTouchListener,Ges
                 break;
             case R.id.menu_button:
                 sendMsg("comenubt ,,,,,,");
+                break;
+            case R.id.home_button:
+                sendMsg("cohome ,,,,,,,,");
                 break;
         }
     }

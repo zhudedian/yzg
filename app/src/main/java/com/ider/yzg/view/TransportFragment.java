@@ -1188,7 +1188,7 @@ public class TransportFragment extends Fragment implements View.OnClickListener,
                     editor.putBoolean("data_save_boxfile", true);
                     editor.apply();
                 }
-                if (type==1||MyData.disPlayMode.equals(MyData.NORMAL)) {
+                if (type==1||type==0||MyData.disPlayMode.equals(MyData.NORMAL)) {
                     if (!MyData.selectBoxFiles.contains(boxFile)){
                         MyData.boxFiles.add(boxFile);
                     }else {
@@ -1343,8 +1343,10 @@ public class TransportFragment extends Fragment implements View.OnClickListener,
                 if (MyData.isConnect) {
                     if (MyData.boxFilePath.equals(MyData.root_path) || MyData.boxFilePath.equals("")) {
                         if (!MyData.disPlayMode.equals(MyData.NORMAL)) {
+                            if (MyData.disPlayMode.equals(MyData.TRANS)) {
+                                page = 2;
+                            }
                             MyData.disPlayMode = MyData.NORMAL;
-                            page = 2;
                             initView();
                             return true;
                         }
@@ -1362,8 +1364,10 @@ public class TransportFragment extends Fragment implements View.OnClickListener,
                     return true;
                 }else {
                     if (!MyData.disPlayMode.equals(MyData.NORMAL)) {
+                        if (MyData.disPlayMode.equals(MyData.TRANS)) {
+                            page = 2;
+                        }
                         MyData.disPlayMode = MyData.NORMAL;
-                        page = 2;
                         initView();
                         return true;
                     }
@@ -1381,8 +1385,10 @@ public class TransportFragment extends Fragment implements View.OnClickListener,
             if (!MyData.isShowCheck) {
                 if (MyData.fileSelect.equals(Environment.getExternalStorageDirectory())) {
                     if (!MyData.disPlayMode.equals(MyData.NORMAL)){
+                        if (MyData.disPlayMode.equals(MyData.TRANS)) {
+                            page = 1;
+                        }
                         MyData.disPlayMode = MyData.NORMAL;
-                        page = 1;
                         initView();
                         return true;
                     }

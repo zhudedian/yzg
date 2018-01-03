@@ -162,7 +162,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
                 break;
             case 1:
-//                fragmentInter = remoteFragment;
+                fragmentInter = remoteFragment;
                 apps.setSelect(false);
                 remote.setSelect(true);
                 transmitter.setSelect(false);
@@ -320,7 +320,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 //    }
     @Override
    public void onBackPressed(){
-        if (currentItem!=2||!fragmentInter.fragmentBack()){
+        if (currentItem!=2&&currentItem!=3||!fragmentInter.fragmentBack()){
             finish();
         }
     }

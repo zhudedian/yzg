@@ -9,6 +9,7 @@ public class Picture {
     private String picName;
     private String picPath;
     private long picTime;
+    private boolean isShowOp;
     public Picture(String picName,String picPath,long picTime){
         this.picName = picName;
         this.picPath = picPath;
@@ -32,5 +33,12 @@ public class Picture {
     }
     public long getPicTime(){
         return picTime;
+    }
+
+    public void setShowOp(boolean isShowOp){
+        this.isShowOp = isShowOp;
+    }
+    public boolean isShowOp(){
+        return isShowOp;
     }
 }

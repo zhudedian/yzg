@@ -206,5 +206,9 @@
 
 
     </LinearLayout>
-
+    <com.ider.yzg.view.EditView
+        android:id="@+id/edit_view"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:visibility="gone"/>
 </RelativeLayout>

@@ -2,6 +2,7 @@ package com.ider.yzg.popu;
 
 
 import android.content.Context;
+import android.util.Log;
 import android.view.View;
 
 import com.ider.yzg.R;
@@ -16,6 +17,7 @@ public class PopupUtil {
     private static ConfirmPopup confirmPopup;
     private static ProgressPopup progressPopup;
     private static EditPopup editPopup;
+    private static ScreenPicPopup screenPicPopup;
     public static ConfirmPopup buildConfirmPopup(Context context, String titleStr, String noticeStr, String okStr,
                                                String cancelStr, boolean outsideTouchable, ConfirmPopu.OnOkListener listener){
         confirmPopup = new ConfirmPopup(context,titleStr,noticeStr,okStr,cancelStr,outsideTouchable,listener);
@@ -50,6 +52,10 @@ public class PopupUtil {
         progressPopup = new ProgressPopup(context,context.getString(R.string.popup_move_title),false,listener);
         return progressPopup;
     }
+    public static ScreenPicPopup getScreenPicPopup(Context context){
+        screenPicPopup = new ScreenPicPopup(context,true);
+        return screenPicPopup;
+    }
     public static EditPopup getEditPopup(Context context,String editStr,EditPopup.OnOkListener listener){
         editPopup = new EditPopup(context,context.getResources().getString(R.string.popup_ok_button),editStr,
                 context.getResources().getString(R.string.popup_ok_button),
@@ -66,6 +72,9 @@ public class PopupUtil {
             return confirmPopup.isShowing();
         }else if (progressPopup!=null) {
             return progressPopup.isShowing();
+        }else if (screenPicPopup!=null) {
+
+            return screenPicPopup.isShowing();
         }else {
             return false;
         }
@@ -96,6 +105,11 @@ public class PopupUtil {
             progressPopup.update(numBytes,totalBytes,parents,speed);
         }
     }
+    public static void notifyDataChange(){
+        if (screenPicPopup!=null){
+            screenPicPopup.notifyDataChange();
+        }
+    }
     public static void dismissPopup() {
         if(confirmPopup!=null&& confirmPopup.isShowing()){
             if (confirmPopup.isCancelable()) {
@@ -111,6 +125,11 @@ public class PopupUtil {
             if (editPopup.isCancelable()) {
                 editPopup.dismiss();
                 editPopup= null;
+            }
+        }else if (screenPicPopup!=null&&screenPicPopup.isShowing()){
+            if (screenPicPopup.isCancelable()){
+                screenPicPopup.dismiss();
+                screenPicPopup = null;
             }
         }
     }

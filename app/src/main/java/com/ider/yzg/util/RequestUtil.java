@@ -56,7 +56,55 @@ public class RequestUtil {
             }
         }.start();
     }
-
+    public static void sendInfo(String info){
+        final String infos = StringUtil.changeToUnicode(info);
+        new Thread() {
+            @Override
+            public void run() {
+                try {
+                    Request request = new Request.Builder().header("info",infos)
+                            .url(MyData.infoUrl).build();
+                    Call call = okHttpClient.newCall(request);
+                    call.execute();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        }.start();
+    }
+    public static void requestInfo(final HandleResult handleResult){
+        new Thread() {
+            @Override
+            public void run() {
+                try {
+                    while (true) {
+                        if (!MyData.isRequesting) {
+                            MyData.isRequesting = true;
+                            Request request = new Request.Builder().header("info","\"requestInfo\"" )
+                                    .url(MyData.infoUrl).build();
+                            Call call = okHttpClient.newCall(request);
+                            Response response = call.execute();
+                            final String result = response.body().string();
+                            Log.i(TAG, "result:"+result);
+                            Message message = mHandler.obtainMessage();
+                            message.what = 0;
+                            Bundle data = new Bundle();
+                            data.putString("result",result);
+                            message.setData(data);
+                            RequestUtil.handleResult = handleResult;
+                            mHandler.sendMessage(message);
+                            MyData.isRequesting = false;
+                            break;
+                        }
+                        sleep(100);
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    mHandler.sendEmptyMessage(1);
+                }
+            }
+        }.start();
+    }
     private static Handler mHandler = new Handler(Looper.getMainLooper()){
         @Override
         public void handleMessage(Message msg){

@@ -34,7 +34,7 @@ public class MyData {
     public static String root_path = "/storage";
     public static String boxFilePath="/storage";
     public static String picIconSavePath;
-    public static String screenshotSavePath;
+    public static String screenshotSavePath = Environment.getExternalStorageDirectory().getPath()+File.separator+"Ider/Screenshot";
     public static SocketClient client;
     public static boolean isRequesting;
     public static String disPlayMode = "normal";

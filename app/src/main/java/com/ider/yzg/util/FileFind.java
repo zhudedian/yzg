@@ -30,7 +30,7 @@ public class FileFind {
                 addFile(f,fileList);
             }
         }
-        //ListSort.sort(fileList);
+        ListSort.sort(fileList);
         handler.sendEmptyMessage(0);
     }
     private static void addFile(File f,List<BoxFile> uploadFiles){

@@ -12,6 +12,7 @@
     <uses-feature android:name="android.hardware.ConsumerIrManager"/>
 
 
+
     <application
         android:name=".util.MyApplication"
         android:allowBackup="true"
