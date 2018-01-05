@@ -50,8 +50,12 @@ import java.util.concurrent.TimeUnit;
 
 import okhttp3.OkHttpClient;
 
+import static android.R.attr.factor;
+import static android.R.attr.type;
 import static android.R.id.list;
+import static android.R.transition.move;
 import static com.ider.yzg.db.MyData.fileSelect;
+import static org.litepal.crud.DataSupport.findAll;
 
 
 /**
@@ -67,8 +71,8 @@ public class TransportFragment extends Fragment implements View.OnClickListener,
 
     private OperateBar operateBar;
     private TextView tvbox, mobile;
-    private LinearLayout disConnectLinear,pathLinearView;
-    private TextView noticeText;
+    private NoticeBar noticeBar;
+    private LinearLayout pathLinearView;
     private TextView pathTextView;
     private ProgressDialog progressDialog;
     private OkHttpClient okHttpClient;
@@ -88,7 +92,8 @@ public class TransportFragment extends Fragment implements View.OnClickListener,
     private List<BoxFile> moSelectFiles = new ArrayList<>();
     private List<BoxFile> overWriteFiles;
     private List<String> diskPath = new ArrayList<>();
-    private String moveToPath,copyAtPath,selectPath;
+    private String moveToPath,copyAtPath;
+    private BoxFile selectDisk,moveDisk;
     private long dirAvaSize;
     private int page = 1;
 
@@ -97,9 +102,8 @@ public class TransportFragment extends Fragment implements View.OnClickListener,
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_transport, container, false);
         operateBar = (OperateBar)view.findViewById(R.id.operate_bar);
-        disConnectLinear = (LinearLayout)view.findViewById(R.id.notice_linear_layout);
+        noticeBar = (NoticeBar)view.findViewById(R.id.notice_bar);
         pathLinearView = (LinearLayout)view.findViewById(R.id.path_linear_view);
-        noticeText = (TextView)view.findViewById(R.id.notice_text);
         pathTextView = (TextView)view.findViewById(R.id.path_text_view);
         tvbox = (TextView) view.findViewById(R.id.tvbox_button);
         mobile = (TextView) view.findViewById(R.id.mobile_button);
@@ -150,15 +154,20 @@ public class TransportFragment extends Fragment implements View.OnClickListener,
 
     @Override
     public void fragmentInit() {
+        if (!isAdded()){
+            return;
+        }
         initView();
         if (MyData.boxFiles.size()==0||isLoadLocal)
         init();
     }
     @Override
     public  void fragmentHandleMsg(String msg){
+        if (!isAdded()){
+            return;
+        }
         if (msg.contains("connect_success")) {
             init();
-
         }else if (msg.contains("connect_failed")) {
 
         }
@@ -166,10 +175,9 @@ public class TransportFragment extends Fragment implements View.OnClickListener,
     }
     private void initView(){
         if (MyData.isConnect){
-            disConnectLinear.setVisibility(View.GONE);
+            noticeBar.setGONE();
         }else {
-            disConnectLinear.setVisibility(View.VISIBLE);
-            noticeText.setText(getString(R.string.disconnect_notice));
+            noticeBar.setVISIBLE();
         }
         if (page==1){
             clickTvbox();
@@ -193,18 +201,11 @@ public class TransportFragment extends Fragment implements View.OnClickListener,
                 }
                 if (page==1) {
                     if (!MyData.isShowCheck) {
-                        if (MyData.isConnect) {
+//                        if (MyData.isConnect) {
                             BoxFile boxFile = MyData.boxFiles.get(position);
                             if (boxFile.getFileType() == 0){
                                 MyData.boxFilePath = boxFile.getFilePath();
-                                if (MyData.disPlayMode.equals(MyData.MOVE)){
-                                    moveToPath = boxFile.getFilePath();
-                                }else {
-                                    if (moveToPath ==null){
-                                        moveToPath = boxFile.getFilePath();
-                                    }
-                                    copyAtPath = boxFile.getFilePath();
-                                }
+                                selectDisk = boxFile;
                                 init();
                             }else if (boxFile.getFileType() == 1) {
                                 fileName = boxFile.getFileName();
@@ -220,9 +221,9 @@ public class TransportFragment extends Fragment implements View.OnClickListener,
 //                                MyData.selectBoxFiles.add(boxFile);
                                 //showMenuDialog();
                             }
-                        }else {
-                            Toast.makeText(context, context.getString(R.string.disconnect_notice), Toast.LENGTH_SHORT).show();
-                        }
+//                        }else {
+//                            Toast.makeText(context, context.getString(R.string.disconnect_notice), Toast.LENGTH_SHORT).show();
+//                        }
                     } else {
                         BoxFile boxFile = MyData.boxFiles.get(position);
                         if (MyData.selectBoxFiles.contains(boxFile)) {
@@ -262,18 +263,23 @@ public class TransportFragment extends Fragment implements View.OnClickListener,
                 if (MyData.isShowCheck){
                     return true;
                 }
+                BoxFile boxFile;
+                if (page == 1){
+                    boxFile = MyData.boxFiles.get(position);
+                    if (boxFile.getFileType()==0){
+                        return true;
+                    }
+                }
                 MyData.isShowCheck = true;
                 operateBar.setVisibility(View.VISIBLE);
                 operateBar.setAllcheck(false);
                 if (page==1){
                     operateBar.showNoCheckMenu(true);
-                    selectPath = MyData.boxFilePath;
                     MyData.selectBoxFiles.clear();
                     boxAdapter.notifyDataSetChanged();
                 }else {
                     operateBar.showNoCheckMenu(false);
-                    selectPath = MyData.fileSelect.getPath();
-                    moFiles.clear();
+                    moSelectFiles.clear();
                     adapter.notifyDataSetChanged();
                 }
                 return true;
@@ -287,14 +293,7 @@ public class TransportFragment extends Fragment implements View.OnClickListener,
                 operateBarOnClick(isAllCheck,isCopy,isRename,isRemove,isMove,isTrans,isNewCreate,isCancel);
             }
         });
-        disConnectLinear.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if (!MyData.isConnect){
-                    ((MainActivity)getContext()).connecting();
-                }
-            }
-        });
+
 
     }
     private void operateBarAdapterClick(BoxFile boxFile){
@@ -326,8 +325,8 @@ public class TransportFragment extends Fragment implements View.OnClickListener,
                     boxFile.setOpenOp(false);
                 } else {
                     boxFile.setOpenOp(true);
-                    MyData.selectBoxFiles.clear();
-                    MyData.selectBoxFiles.add(boxFile);
+                    moSelectFiles.clear();
+                    moSelectFiles.add(boxFile);
                 }
                 openOpBoxFile = boxFile;
             } else {
@@ -336,8 +335,8 @@ public class TransportFragment extends Fragment implements View.OnClickListener,
                 }
                 openOpBoxFile = boxFile;
                 boxFile.setOpenOp(true);
-                MyData.selectBoxFiles.clear();
-                MyData.selectBoxFiles.add(boxFile);
+                moSelectFiles.clear();
+                moSelectFiles.add(boxFile);
             }
             adapter.notifyDataSetChanged();
         }
@@ -368,12 +367,20 @@ public class TransportFragment extends Fragment implements View.OnClickListener,
     public void onClick(View view) {
         switch (view.getId()) {
             case R.id.tvbox_button:
-                page = 1;
-                clickTvbox();
+                if (MyData.disPlayMode.equals(MyData.NORMAL)){
+                    page = 1;
+                    clickTvbox();
+                }else {
+                    Toast.makeText(context, getString(R.string.save_notice), Toast.LENGTH_SHORT).show();
+                }
                 break;
             case R.id.mobile_button:
-                page = 2;
-                clickMobile();
+                if (MyData.disPlayMode.equals(MyData.NORMAL)) {
+                    page = 2;
+                    clickMobile();
+                }else {
+                    Toast.makeText(context, getString(R.string.save_notice), Toast.LENGTH_SHORT).show();
+                }
                 break;
         }
     }
@@ -441,7 +448,18 @@ public class TransportFragment extends Fragment implements View.OnClickListener,
                 boolean isDataSave = preferences.getBoolean("data_save_boxfile", false);
                 if (isDataSave) {
                     synchronized (boxAdapter) {
-                        List<BoxFile> files = DataSupport.findAll(BoxFile.class);
+                        List<BoxFile> files = DataSupport.where("parentPath = ?",MyData.boxFilePath).find(BoxFile.class);
+                        if (files.size()==0){
+                            Toast.makeText(context, "无缓存数据！", Toast.LENGTH_SHORT).show();
+                        }else {
+                            if (MyData.boxFilePath.equals(MyData.root_path)){
+                                for (BoxFile boxFile:files){
+                                    if (!diskPath.contains(boxFile.getFilePath())) {
+                                        diskPath.add(boxFile.getFilePath());
+                                    }
+                                }
+                            }
+                        }
                         MyData.boxFiles.clear();
                         MyData.boxFiles.addAll(files);
                         ListSort.sort(MyData.boxFiles);
@@ -512,7 +530,8 @@ public class TransportFragment extends Fragment implements View.OnClickListener,
                             init();
                             return;
                         }
-                        if (copyAtPath.equals(moveToPath)) {
+                        if (moveDisk.getFilePath().equals(selectDisk.getFilePath())) {
+                            Log.i("startMove", "startMoveTvFile"+"copyAtPath="+copyAtPath+"moveToPath="+moveToPath);
                             MoveUtil.startMoveTvFile(list, totalBytes, new MoveUtil.OnCompleteListener() {
                                 @Override
                                 public void complete() {
@@ -530,6 +549,7 @@ public class TransportFragment extends Fragment implements View.OnClickListener,
                                 }
                             });
                         }else {
+                            Log.i("startMove", "startCutTvFile"+"copyAtPath="+copyAtPath+"moveToPath="+moveToPath);
                             MoveUtil.startCutTvFile(list, totalBytes, new MoveUtil.OnCompleteListener() {
                                 @Override
                                 public void complete() {
@@ -815,6 +835,7 @@ public class TransportFragment extends Fragment implements View.OnClickListener,
                 }
                 editView.dismiss();
                 imm.hideSoftInputFromWindow(editView.getWindowToken(), 0);
+                init();
             }
         });
         EditText editText = editView.getEditTextView();
@@ -873,18 +894,25 @@ public class TransportFragment extends Fragment implements View.OnClickListener,
         notifyChanged();
     }
     private void cancel(){
+        MyData.selectBoxFiles.clear();
+        moSelectFiles.clear();
+        noticeBar.setVisibility(false);
+        progressBar.setVisibility(View.VISIBLE);
         if (MyData.disPlayMode.equals(MyData.TRANS)) {
             if (page == 1) {
                 MyData.disPlayMode = MyData.NORMAL;
                 page = 2;
                 initView();
+                init();
             } else {
                 MyData.disPlayMode = MyData.NORMAL;
                 page = 1;
                 initView();
+                init();
             }
         }else {
             MyData.disPlayMode = MyData.NORMAL;
+            initView();
             init();
         }
     }
@@ -892,11 +920,12 @@ public class TransportFragment extends Fragment implements View.OnClickListener,
         if (MyData.disPlayMode.equals(MyData.NORMAL)){
             MyData.disPlayMode = MyData.MOVE;
             MyData.isShowCheck = false;
+            moveDisk = selectDisk;
             initView();
             operateBar.showMoveMenu();
-            disConnectLinear.setVisibility(View.VISIBLE);
-            noticeText.setText(getString(R.string.save_notice));
+            noticeBar.setVisibility(true).setText(getString(R.string.save_notice));
         }else {
+            noticeBar.setVisibility(false);
             final List<BoxFile> list = new ArrayList<>();
             final List<BoxFile> overList = new ArrayList<>();
             if (page ==1) {
@@ -942,9 +971,9 @@ public class TransportFragment extends Fragment implements View.OnClickListener,
             MyData.isShowCheck = false;
             initView();
             operateBar.showCopyMenu();
-            disConnectLinear.setVisibility(View.VISIBLE);
-            noticeText.setText(getString(R.string.save_notice));
+            noticeBar.setVisibility(true).setText(getString(R.string.save_notice));
         }else {
+            noticeBar.setVisibility(false);
             final List<BoxFile> list = new ArrayList<>();
             final List<BoxFile> overList = new ArrayList<>();
             if (page ==1) {
@@ -994,9 +1023,9 @@ public class TransportFragment extends Fragment implements View.OnClickListener,
             }
             initView();
             operateBar.showTransMenu();
-            disConnectLinear.setVisibility(View.VISIBLE);
-            noticeText.setText(getString(R.string.save_notice));
+            noticeBar.setVisibility(true).setText(getString(R.string.save_notice));
         }else {
+            noticeBar.setVisibility(false);
             final List<BoxFile> list = new ArrayList<>();
             final List<BoxFile> overList = new ArrayList<>();
             if (page ==1) {
@@ -1093,9 +1122,11 @@ public class TransportFragment extends Fragment implements View.OnClickListener,
     private void rename(){
         if (page==1) {
             showRenameEditPopup(MyData.selectBoxFiles.get(0));
+            MyData.selectBoxFiles.get(0).setOpenOp(false);
             MyData.selectBoxFiles.clear();
         }else {
             showRenameEditPopup(moSelectFiles.get(0));
+            moSelectFiles.get(0).setOpenOp(false);
             moSelectFiles.clear();
         }
     }
@@ -1148,15 +1179,7 @@ public class TransportFragment extends Fragment implements View.OnClickListener,
             MyData.hideFiles=new ArrayList<>();
         }
         MyData.hideFiles.clear();
-        boolean isDataSave = preferences.getBoolean("data_save_boxfile",false);
-        boolean firstPath ;
-        if (MyData.boxFilePath.equals("/storage/emulated/0")){
-            if (isDataSave)
-                DataSupport.deleteAll(BoxFile.class);
-            firstPath = true;
-        }else {
-            firstPath = false;
-        }
+
         synchronized (boxAdapter) {
             MyData.boxFiles.clear();
 
@@ -1172,25 +1195,24 @@ public class TransportFragment extends Fragment implements View.OnClickListener,
                 if (type==0){
                     String[] names = fis[0].split("\"path=\"");
                     size = Long.parseLong(fi[0]);
-                    boxFile = new BoxFile(type, names[0],time, size, names[1]);
-                    diskPath.add(names[1]);
+                    boxFile = new BoxFile(MyData.boxFilePath,type, names[0],time, size, names[1]);
+                    if (!diskPath.contains(names[1])) {
+                        diskPath.add(names[1]);
+                    }
                 }else if (type==1){
                     String[] sizes = fi[0].split("\"count=\"");
                     size = Long.parseLong(sizes[0]);
-                    boxFile = new BoxFile(type, fis[0], time, size, MyData.boxFilePath + "/" + fis[0]);
+                    boxFile = new BoxFile(MyData.boxFilePath,type, fis[0], time, size,MyData.boxFilePath+File.separator+fis[0]);
                     boxFile.setFileCount(Integer.parseInt(sizes[1]));
                 }else {
                     size = Long.parseLong(fi[0]);
-                    boxFile = new BoxFile(type, fis[0], time, size, MyData.boxFilePath + "/" + fis[0]);
-                }
-                if (firstPath) {
-                    boxFile.save();
-                    editor.putBoolean("data_save_boxfile", true);
-                    editor.apply();
+                    boxFile = new BoxFile(MyData.boxFilePath,type, fis[0], time, size,MyData.boxFilePath+File.separator+fis[0]);
                 }
                 if (type==1||type==0||MyData.disPlayMode.equals(MyData.NORMAL)) {
-                    if (!MyData.selectBoxFiles.contains(boxFile)){
-                        MyData.boxFiles.add(boxFile);
+                    if (!MyData.selectBoxFiles.contains(boxFile)||MyData.disPlayMode.equals(MyData.NORMAL)){
+                        if (!MyData.boxFiles.contains(boxFile)) {
+                            MyData.boxFiles.add(boxFile);
+                        }
                     }else {
                         MyData.hideFiles.add(boxFile);
                     }
@@ -1200,6 +1222,10 @@ public class TransportFragment extends Fragment implements View.OnClickListener,
                 }
             }
             ListSort.sort(MyData.boxFiles);
+            List<BoxFile> list = new ArrayList<>();
+            list.addAll(MyData.boxFiles);
+            list.addAll(MyData.hideFiles);
+            saveBoxFile(list);
         }
 //        if (!MyData.disPlayMode.equals(MyData.NORMAL)){
 //
@@ -1209,8 +1235,26 @@ public class TransportFragment extends Fragment implements View.OnClickListener,
 //        progressBar.setVisibility(View.GONE);
         mHandler.sendEmptyMessage(0);
         isHandle = false;
+
     }
 
+    private void saveBoxFile(final List<BoxFile> list){
+        new Thread(){
+            @Override
+            public void run(){
+                boolean isDataSave = preferences.getBoolean("data_save_boxfile",false);
+                for (BoxFile boxFile:list) {
+                    if (isDataSave) {
+                        DataSupport.deleteAll(BoxFile.class, "filePath = ?", boxFile.getFilePath());
+                    }
+                    boxFile.save();
+                    editor.putBoolean("data_save_boxfile", true);
+                    editor.apply();
+                }
+            }
+        }.start();
+
+    }
 
     private String changeToUnicode(String str) {
         StringBuffer stringBuffer = new StringBuffer();
@@ -1266,16 +1310,19 @@ public class TransportFragment extends Fragment implements View.OnClickListener,
 //                    filePath.setText(MyData.boxFilePath);
                     if (page==1) {
                         listView.setAdapter(boxAdapter);
-                        pathTextView.setText(MyData.boxFilePath);
                         if (MyData.boxFilePath.equals(MyData.root_path)){
                             pathTextView.setText("已挂载设备");
+                        }else {
+                            String filePath = MyData.boxFilePath.replace(selectDisk.getFilePath(), selectDisk.getFileName());
+                            pathTextView.setText(filePath);
                         }
                         if (MyData.boxFiles.size() == 0) {
 //                        menuRel.setVisibility(View.GONE);
                             MyData.isShowCheck = false;
                         }
                     }else {
-                        pathTextView.setText(MyData.fileSelect.getPath());
+                        String filePath = MyData.fileSelect.getPath().replace(Environment.getExternalStorageDirectory().getPath(),"手机内存");
+                        pathTextView.setText(filePath);
                         listView.setAdapter(adapter);
                     }
 
@@ -1340,13 +1387,14 @@ public class TransportFragment extends Fragment implements View.OnClickListener,
         }
         if (page==1) {
             if (!MyData.isShowCheck) {
-                if (MyData.isConnect) {
+//                if (MyData.isConnect) {
                     if (MyData.boxFilePath.equals(MyData.root_path) || MyData.boxFilePath.equals("")) {
                         if (!MyData.disPlayMode.equals(MyData.NORMAL)) {
                             if (MyData.disPlayMode.equals(MyData.TRANS)) {
                                 page = 2;
                             }
                             MyData.disPlayMode = MyData.NORMAL;
+                            noticeBar.setVisibility(false);
                             initView();
                             return true;
                         }
@@ -1362,17 +1410,17 @@ public class TransportFragment extends Fragment implements View.OnClickListener,
                     Log.i("MyData.boxFilePath", MyData.boxFilePath);
                     init();
                     return true;
-                }else {
-                    if (!MyData.disPlayMode.equals(MyData.NORMAL)) {
-                        if (MyData.disPlayMode.equals(MyData.TRANS)) {
-                            page = 2;
-                        }
-                        MyData.disPlayMode = MyData.NORMAL;
-                        initView();
-                        return true;
-                    }
-                    return false;
-                }
+//                }else {
+//                    if (!MyData.disPlayMode.equals(MyData.NORMAL)) {
+//                        if (MyData.disPlayMode.equals(MyData.TRANS)) {
+//                            page = 2;
+//                        }
+//                        MyData.disPlayMode = MyData.NORMAL;
+//                        initView();
+//                        return true;
+//                    }
+//                    return false;
+//                }
             } else {
                 MyData.isShowCheck = false;
                 operateBar.setVisibility(View.GONE);
@@ -1389,6 +1437,7 @@ public class TransportFragment extends Fragment implements View.OnClickListener,
                             page = 1;
                         }
                         MyData.disPlayMode = MyData.NORMAL;
+                        noticeBar.setVisibility(false);
                         initView();
                         return true;
                     }

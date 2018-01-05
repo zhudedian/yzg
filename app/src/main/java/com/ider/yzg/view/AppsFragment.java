@@ -72,7 +72,7 @@ public class AppsFragment extends Fragment implements View.OnClickListener,Fragm
     private TextView recommend,local,uninstall;
     private ProgressBar progressBar;
     private ProgressDialog progressDialog;
-    private LinearLayout disConnectLinear;
+    private NoticeBar noticeBar;
     private ListView listView;
     private File[] files;
     private ApkAdapter adapter;
@@ -103,7 +103,7 @@ public class AppsFragment extends Fragment implements View.OnClickListener,Fragm
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState){
         View view = inflater.inflate(R.layout.fragment_apps,container,false);
-        disConnectLinear = (LinearLayout)view.findViewById(R.id.notice_linear_layout);
+        noticeBar = (NoticeBar)view.findViewById(R.id.notice_bar);
         recommend = (TextView) view.findViewById(R.id.recommend_button);
         local = (TextView) view.findViewById(R.id.local_button);
         uninstall = (TextView)view.findViewById(R.id.uninstall_button);
@@ -152,7 +152,7 @@ public class AppsFragment extends Fragment implements View.OnClickListener,Fragm
     }
     @Override
     public void fragmentInit() {
-        Log.i("fragmentInit",localApps.size()+"");
+//        Log.i("fragmentInit",localApps.size()+"");
         initView();
         if (page == 1){
             recommend.performClick();
@@ -171,9 +171,9 @@ public class AppsFragment extends Fragment implements View.OnClickListener,Fragm
     }
     private void initView(){
         if (MyData.isConnect){
-            disConnectLinear.setVisibility(View.GONE);
+            noticeBar.setGONE();
         }else {
-            disConnectLinear.setVisibility(View.VISIBLE);
+            noticeBar.setVISIBLE();
         }
         if (page==2){
             clickLocal();
@@ -319,7 +319,7 @@ public class AppsFragment extends Fragment implements View.OnClickListener,Fragm
                 localApps = DataSupport.findAll(ApkFile.class);
                 for (int i = 0;i<localApps.size();i++){
                     ApkFile apk = localApps.get(i);
-                    Log.i(TAG,"apkFile.getFileName()="+apk.getFileName());
+//                    Log.i(TAG,"apkFile.getFileName()="+apk.getFileName());
                     File file = new File(apk.getFilePath());
                     if (!file.exists()){
                         DataSupport.deleteAll(ApkFile.class,"filePath = ?",apk.getFilePath());
@@ -350,7 +350,7 @@ public class AppsFragment extends Fragment implements View.OnClickListener,Fragm
                     mHandler.sendEmptyMessage(1);
                 }
             }.start();
-            Log.i("apks",localApps.size()+"");
+//            Log.i("apks",localApps.size()+"");
             if (isFirstOpen) {
                 isFirstOpen = false;
                 File file = Environment.getExternalStorageDirectory(); //从SD的根目录开始
@@ -492,7 +492,7 @@ public class AppsFragment extends Fragment implements View.OnClickListener,Fragm
                 String[] f2 = f[1].split("\"verN=\"");
                 int verC = Integer.parseInt(f2[0]);
                 String verN = f2[1];
-                Log.i(TAG, "pckn=" + pckn + "verC=" + verC);
+//                Log.i(TAG, "pckn=" + pckn + "verC=" + verC);
                 TvApp app = new TvApp(type, label, pckn, verC, verN);
                 if (isDataSave)
                 DataSupport.deleteAll(TvApp.class, "packageName = ?", app.getPackageName());
@@ -517,7 +517,7 @@ public class AppsFragment extends Fragment implements View.OnClickListener,Fragm
         mHandler.sendEmptyMessage(0);
     }
     private void initLocalState(){
-        Log.i(TAG,"initLocalState");
+//        Log.i(TAG,"initLocalState");
         if (localApps.size()>0&&apps.size()>0){
             new Thread(){
                 @Override

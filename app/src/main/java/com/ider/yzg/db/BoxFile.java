@@ -2,6 +2,8 @@ package com.ider.yzg.db;
 
 import org.litepal.crud.DataSupport;
 
+import java.io.File;
+
 /**
  * Created by Eric on 2017/8/29.
  */
@@ -15,6 +17,7 @@ public class BoxFile extends DataSupport {
     private boolean isOpenOp;
     private String fileName;
 
+    private String parentPath;
     private String filePath;
 
     private long createTime;
@@ -46,6 +49,21 @@ public class BoxFile extends DataSupport {
         this.fileSize = size;
         this.filePath = filePath;
     }
+    public BoxFile(String parentPath,int types,String fileName,long createTime,long size){
+        this.parentPath = parentPath;
+        this.fileTypes = types;
+        this.fileName = fileName;
+        this.createTime = createTime;
+        this.fileSize = size;
+    }
+    public BoxFile(String parentPath,int types,String fileName,long createTime,long size,String filePath){
+        this.parentPath = parentPath;
+        this.fileTypes = types;
+        this.fileName = fileName;
+        this.createTime = createTime;
+        this.fileSize = size;
+        this.filePath = filePath;
+    }
     public BoxFile(int types,String fileName,long createTime,long size,String filePath,String savePath){
         this.fileTypes = types;
         this.fileName = fileName;
@@ -60,6 +78,14 @@ public class BoxFile extends DataSupport {
 
     public String getFileName(){
         return fileName;
+    }
+
+    public void setParentPath(String parentPath){
+        this.parentPath = parentPath;
+    }
+
+    public String getParentPath(){
+        return parentPath;
     }
 
     public void setFilePath(String path){

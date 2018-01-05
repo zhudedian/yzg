@@ -15,18 +15,13 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.ider.yzg.R;
 import com.ider.yzg.db.MyData;
 import com.ider.yzg.util.EditChangeListener;
 import com.ider.yzg.util.FragmentInter;
 import com.ider.yzg.util.RequestUtil;
-
-import okhttp3.Call;
-import okhttp3.Request;
-import okhttp3.Response;
-
-import static android.R.string.ok;
 
 /**
  * Created by Eric on 2017/10/25.
@@ -38,6 +33,7 @@ public class RemoteFragment extends Fragment implements FragmentInter,View.OnTou
     private Context context;
 
     private TextView push,touch;
+    private NoticeBar noticeBar;
     private LinearLayout touchLinear;
     private RelativeLayout pushRelative;
     private EditView editView;
@@ -54,7 +50,7 @@ public class RemoteFragment extends Fragment implements FragmentInter,View.OnTou
     private String msg;
     public static String info,longinfo,lenth;
     private GestureDetector mygesture = new GestureDetector(this);
-    private String editTextOriginInfo;
+    private String editTextOriginInfo="",editTextInfo="";
     public int page = 1;
 
 
@@ -64,6 +60,7 @@ public class RemoteFragment extends Fragment implements FragmentInter,View.OnTou
         push = (TextView) view.findViewById(R.id.push_button);
         touch = (TextView) view.findViewById(R.id.touch_button);
 
+        noticeBar = (NoticeBar)view.findViewById(R.id.notice_bar);
         touchLinear = (LinearLayout)view.findViewById(R.id.touch_linear);
         pushRelative = (RelativeLayout)view.findViewById(R.id.push_relative);
 
@@ -103,20 +100,35 @@ public class RemoteFragment extends Fragment implements FragmentInter,View.OnTou
     }
     @Override
     public void fragmentInit() {
-
+        if (!isAdded()){
+            return;
+        }
     }
     @Override
     public  void fragmentHandleMsg(String msg){
-        if (msg.contains("InOp")){
+        if (!isAdded()){
+            return;
+        }
+        if (msg.contains("connect_success")) {
+            noticeBar.setGONE();
+        }else if (msg.contains("connect_failed")) {
+            noticeBar.setVISIBLE();
+        }else if (msg.contains("InOp")){
+            if (editView.isShowing()){
+                return;
+            }
             editView.show(context.getString(R.string.edit_write_title),new EditView.OnOkClickListener() {
                 @Override
                 public void click(boolean isOk, String editStr) {
                     if (isOk) {
-                        RequestUtil.sendInfo(editStr);
+//                        RequestUtil.sendInfo(editStr);
+                        RequestUtil.closeIME(editStr);
                     }else {
-                        RequestUtil.sendInfo(editTextOriginInfo);
+                        RequestUtil.closeIME(editTextOriginInfo);
+//                        RequestUtil.sendInfo(editTextOriginInfo);
                     }
-                    MyData.client.sendMsg("cb ,,,,,,,,,,,,");
+//                    RequestUtil.closeIME(editStr);
+//                    MyData.client.sendMsg("cb ,,,,,,,,,,,,");
                     editView.dismiss();
                     imm.hideSoftInputFromWindow(editView.getWindowToken(), 0);
                 }
@@ -130,12 +142,17 @@ public class RemoteFragment extends Fragment implements FragmentInter,View.OnTou
         }else if (msg.contains("InCl")){
             editView.dismiss();
             imm.hideSoftInputFromWindow(editView.getWindowToken(), 0);
+            editTextInfo = "";
         }else if (msg.contains("InFo")){
             RequestUtil.requestInfo(new RequestUtil.HandleResult() {
                 @Override
                 public void resultHandle(String result) {
-                    editView.setText(result);
-                    editTextOriginInfo = result;
+//                    editTextInfo = editView.getText();
+//                    if (!editTextInfo.equals(result)) {
+//                        editTextInfo = result;
+                        editView.setText(result);
+                        editTextOriginInfo = result;
+//                    }
                 }
             });
         }
@@ -167,6 +184,10 @@ public class RemoteFragment extends Fragment implements FragmentInter,View.OnTou
 
     @Override
     public void onClick(View view){
+        if (!MyData.isConnect){
+            Toast.makeText(context, context.getString(R.string.disconnect_notice), Toast.LENGTH_SHORT).show();
+            return;
+        }
         switch (view.getId()){
             case R.id.push_button:
                 clickPush();

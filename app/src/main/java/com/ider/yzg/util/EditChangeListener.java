@@ -20,6 +20,7 @@ import static com.ider.yzg.util.SocketClient.mHandler;
 public class EditChangeListener implements TextWatcher {
 
 
+    private String lastSendInfo = "";
     public EditChangeListener(){
         super();
     }
@@ -43,8 +44,11 @@ public class EditChangeListener implements TextWatcher {
     @Override
     public void afterTextChanged(Editable editable) {
         Log.i("Listener", "afterTextChanged---"+editable.toString());
-
-        RequestUtil.sendInfo(editable.toString());
+        String info = editable.toString();
+        if (!lastSendInfo.equals(info)) {
+            lastSendInfo = info;
+            RequestUtil.sendInfo(editable.toString());
+        }
     }
 
 }

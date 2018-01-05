@@ -72,6 +72,22 @@ public class RequestUtil {
             }
         }.start();
     }
+    public static void closeIME(final String info){
+        final String infos = StringUtil.changeToUnicode(info);
+        new Thread() {
+            @Override
+            public void run() {
+                try {
+                    Request request = new Request.Builder().header("info","\"closeIME\""+infos)
+                            .url(MyData.infoUrl).build();
+                    Call call = okHttpClient.newCall(request);
+                    call.execute();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        }.start();
+    }
     public static void requestInfo(final HandleResult handleResult){
         new Thread() {
             @Override

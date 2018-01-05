@@ -92,6 +92,9 @@ public class EditView extends RelativeLayout {
             editText.setText(text);
         }
     }
+    public String getText(){
+        return editText.getText().toString();
+    }
     public EditText getEditTextView(){
         return editText;
     }

@@ -20,8 +20,12 @@ public class Connect {
     private static MulticastSocket multicastSocket;
     private static Handler mHandler;
     private static int connectCount ;
-    private static boolean isOnBrodacastReceiver = false;
+    private static boolean isConnecting = false;
     public static void onBrodacastSend(Handler handler) {
+        if (isConnecting){
+            return;
+        }
+        isConnecting = true;
         mHandler = handler;
         connectCount = 0;
         MyData.isConnect = false;
@@ -34,6 +38,8 @@ public class Connect {
                 @Override
                 public void run() {
                     while (!MyData.isConnect&&connectCount<5) {
+//                    while (connectCount<5) {
+                        Log.i("onBrodacastSend","connectCount="+connectCount);
                         connectCount++;
                         // 获取当前时间
                         //String time = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());
@@ -60,6 +66,10 @@ public class Connect {
                             e.printStackTrace();
                         }
                     }
+                    if (!MyData.isConnect){
+                        mHandler.sendEmptyMessage(1);
+                    }
+                    isConnecting = false;
                 }
             }).start();
         } catch (UnknownHostException e) {
@@ -67,6 +77,38 @@ public class Connect {
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+    private static void connecting(){
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    MulticastSocket multicastSocket = new MulticastSocket(8082);
+                    InetAddress address = InetAddress.getByName("239.0.0.1");
+                    String msg = "connect";
+                    byte[] buf = msg.getBytes();
+                    DatagramPacket datagramPacket = new DatagramPacket(buf, buf.length);
+                    datagramPacket.setAddress(address);
+                    datagramPacket.setPort(10001);
+                    multicastSocket.send(datagramPacket);
+                    byte[] buf1 = new byte[1024];
+                    DatagramPacket datagramPacket1 = new DatagramPacket(buf1, buf1.length);
+                    multicastSocket.receive(datagramPacket1);
+                    byte[] message = new byte[datagramPacket.getLength()];
+                    System.arraycopy(buf1, 0, message, 0, datagramPacket.getLength());
+                    String ip = datagramPacket.getAddress().toString();
+                    String ms = new String(message);
+                    if (ms.equals("snoop")){
+                        Log.i("connecting","ip="+ip.replace("/",""));
+                        connecting();
+                    }
+                } catch (UnknownHostException e) {
+                    e.printStackTrace();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        }).start();
     }
     private static void onBrodacastReceiver() {
         //Log.i("receiver","onBrodacastReceiver");

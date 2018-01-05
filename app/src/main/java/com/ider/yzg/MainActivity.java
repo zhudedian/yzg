@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.Looper;
 import android.os.Message;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
@@ -233,7 +234,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                                     Connect.onBrodacastSend(mHandler);
                                     init();
                                     Intent intent = new Intent("connect_failed");
-                                    MyApplication.getContext().sendBroadcast(intent);
+                                    sendBroadcast(intent);
                                     endCount = 0;
                                 }
                             }else {
@@ -245,9 +246,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     }
                 };
             }
+            Intent intent = new Intent("connect_success");
+            sendBroadcast(intent);
             if (fragmentInter!=null)
             fragmentInter.fragmentHandleMsg("connect_success");
         }else {
+            Intent intent = new Intent("connect_failed");
+            sendBroadcast(intent);
             if (fragmentInter!=null)
                 fragmentInter.fragmentHandleMsg("connect_failed");
         }
@@ -299,12 +304,15 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             default:
         }
     }
-    Handler mHandler = new Handler(){
+    Handler mHandler = new Handler(Looper.getMainLooper()){
         @Override
         public void handleMessage(Message msg){
             switch (msg.what){
                 case 0:
                     init();
+                    if (MyData.isConnect){
+                        Toast.makeText(MainActivity.this, "连接成功！", Toast.LENGTH_SHORT).show();
+                    }
                     break;
                 default:
                     break;

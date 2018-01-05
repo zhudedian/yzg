@@ -10,6 +10,7 @@ import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import com.ider.yzg.R;
@@ -54,6 +55,7 @@ public class FileAdapter extends ArrayAdapter<BoxFile> {
             viewHolder.checkBox = (CheckBox)view.findViewById(R.id.checkbox);
             viewHolder.draw = (ImageView)view.findViewById(R.id.file_image);
             viewHolder.more_op = (ImageView)view.findViewById(R.id.item_menu_op) ;
+            viewHolder.opRelative = (RelativeLayout) view.findViewById(R.id.op_relative);
             viewHolder.linearOp = (LinearLayout)view.findViewById(R.id.linear_menu);
             viewHolder.trans = (ItemOpMenu)view.findViewById(R.id.item_trans);
             viewHolder.move = (ItemOpMenu)view.findViewById(R.id.item_move);
@@ -70,15 +72,15 @@ public class FileAdapter extends ArrayAdapter<BoxFile> {
         viewHolder.path.setText(FileUtil.getSTime(boxFile.getCreateTime()));
         viewHolder.size.setText(FileUtil.getSize(boxFile.getFileSize()));
             if (MyData.disPlayMode.equals(MyData.NORMAL)&&!MyData.isShowCheck) {
-                viewHolder.more_op.setVisibility(View.VISIBLE);
+                viewHolder.opRelative.setVisibility(View.VISIBLE);
             }else {
-                viewHolder.more_op.setVisibility(View.GONE);
+                viewHolder.opRelative.setVisibility(View.GONE);
             }
             if (boxFile.getFileType()==0){
                 viewHolder.path.setText("可用："+FileUtil.getSize(boxFile.getCreateTime()));
                 viewHolder.size.setText("共："+FileUtil.getSize(boxFile.getFileSize()));
                 viewHolder.draw.setImageResource(R.drawable.item_usb);
-                viewHolder.more_op.setVisibility(View.GONE);
+                viewHolder.opRelative.setVisibility(View.GONE);
             }
         else if (boxFile.getFileType()==1){
             if (boxFile.getFileCount()==0){
@@ -192,6 +194,7 @@ public class FileAdapter extends ArrayAdapter<BoxFile> {
     class ViewHolder{
         ImageView draw,more_op;
         TextView name,size,path;
+        RelativeLayout opRelative;
         LinearLayout linearOp;
         ItemOpMenu trans,move,rename,remove,copy;
         CheckBox checkBox;

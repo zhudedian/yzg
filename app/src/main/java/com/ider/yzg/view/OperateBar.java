@@ -40,7 +40,7 @@ public class OperateBar extends LinearLayout {
         cancel.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (listener!=null&&cancel.isSelect()){
+                if (listener!=null){
                     listener.onMenuClick(false,false,false,false,false,false,false,true);
                 }
             }
@@ -48,7 +48,7 @@ public class OperateBar extends LinearLayout {
         newcreate.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (listener!=null&&newcreate.isSelect()){
+                if (listener!=null){
                     listener.onMenuClick(false,false,false,false,false,false,true,false);
                 }
             }

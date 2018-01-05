@@ -2,15 +2,11 @@ package com.ider.yzg.view;
 
 import android.content.Context;
 import android.os.Bundle;
-import android.os.Environment;
 import android.support.v4.app.Fragment;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ImageView;
 import android.widget.LinearLayout;
-import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -25,8 +21,6 @@ import com.ider.yzg.util.TextUtil;
 
 import java.io.File;
 
-import static android.R.attr.name;
-
 /**
  * Created by Eric on 2018/1/2.
  */
@@ -34,17 +28,15 @@ import static android.R.attr.name;
 public class ToolFragment extends Fragment implements FragmentInter {
 
     private Context context;
-    private LinearLayout disConnectLinear;
+    private NoticeBar noticeBar;
     private TextView deviceInfoText;
-    private TextView noticeText;
     private ToolView screenShot,screenPic,clean,reboot;
     private boolean isShoting = false;
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState){
         View view = inflater.inflate(R.layout.fragment_tool,container,false);
-        disConnectLinear = (LinearLayout)view.findViewById(R.id.notice_linear_layout);
+        noticeBar = (NoticeBar)view.findViewById(R.id.notice_bar);
         deviceInfoText = (TextView)view.findViewById(R.id.device_info_text);
-        noticeText = (TextView)view.findViewById(R.id.notice_text);
         screenShot = (ToolView)view.findViewById(R.id.screen_shot);
         screenPic = (ToolView)view.findViewById(R.id.screen_picture);
         clean = (ToolView)view.findViewById(R.id.tool_clean);
@@ -60,13 +52,24 @@ public class ToolFragment extends Fragment implements FragmentInter {
     }
     @Override
     public void fragmentInit() {
-        if (isAdded())
+        if (!isAdded()){
+            return;
+        }
+
         initView();
 
     }
     @Override
     public  void fragmentHandleMsg(String msg){
-        initView();
+        if (!isAdded()){
+            return;
+        }
+        if (msg.contains("connect_success")) {
+            noticeBar.setGONE();
+            initView();
+        }else if (msg.contains("connect_failed")) {
+            noticeBar.setVISIBLE();
+        }
     }
     public boolean fragmentBack(){
         if (PopupUtil.isPopupShow()){
@@ -76,12 +79,6 @@ public class ToolFragment extends Fragment implements FragmentInter {
         return false;
     }
     private void initView(){
-        if (MyData.isConnect){
-            disConnectLinear.setVisibility(View.GONE);
-        }else {
-            disConnectLinear.setVisibility(View.VISIBLE);
-            noticeText.setText(getString(R.string.disconnect_notice));
-        }
         init();
     }
     private void setListener(){
