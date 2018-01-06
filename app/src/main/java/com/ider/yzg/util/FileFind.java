@@ -35,7 +35,9 @@ public class FileFind {
     }
     private static void addFile(File f,List<BoxFile> uploadFiles){
         if (f.isDirectory()) {
-            uploadFiles.add(new BoxFile(1, f.getName(),FileUtil.getLTime(f), FileUtil.getFileLCount(f), f.getPath()));
+            BoxFile boxFile = new BoxFile(1, f.getName(),FileUtil.getLTime(f), FileUtil.getLSize(f), f.getPath());
+            boxFile.setFileCount(FileUtil.getFileICount(f));
+            uploadFiles.add(boxFile);
         } else if (FileUtil.getFileType(f).equals(FileUtil.str_video_type)&&MyData.disPlayMode.equals(MyData.NORMAL)) {
             uploadFiles.add(new BoxFile(2, f.getName(),FileUtil.getLTime(f), FileUtil.getLSize(f), f.getPath()));
         }else if (FileUtil.getFileType(f).equals(FileUtil.str_audio_type)&&MyData.disPlayMode.equals(MyData.NORMAL)){

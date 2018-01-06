@@ -164,6 +164,17 @@ public class FileUtil {
         }
         return 0;
     }
+    public static int getFileICount(File file){
+        if (file.isDirectory()){
+            File[] files = file.listFiles();
+            if (files!=null){
+                return files.length;
+            }else {
+                return 0;
+            }
+        }
+        return 0;
+    }
     public static void dirDelete(File dir){
         File[] files = dir.listFiles();
         for (File file:files){

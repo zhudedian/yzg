@@ -6,8 +6,10 @@ import android.os.Looper;
 import android.os.Message;
 import android.util.Log;
 
+import com.ider.yzg.db.BoxFile;
 import com.ider.yzg.db.MyData;
 
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import okhttp3.Call;
@@ -55,6 +57,19 @@ public class RequestUtil {
                 }
             }
         }.start();
+    }
+    public static void createDir(String dirPath,final HandleResult handleResult){
+        String comments = "\"createDir=\"" + dirPath;
+        final String comment = StringUtil.changeToUnicode(comments);
+        requestWithComment(comment,handleResult);
+    }
+    public static void delete(List<BoxFile> list, final HandleResult handleResult){
+        String fileName = "\"delete=\"" + list.get(0).getParentPath();
+        for (int i = 0; i < list.size(); i++) {
+            fileName = fileName + "name=" + list.get(i).getFileName();
+        }
+        final String comment = StringUtil.changeToUnicode(fileName);
+        requestWithComment(comment,handleResult);
     }
     public static void sendInfo(String info){
         final String infos = StringUtil.changeToUnicode(info);

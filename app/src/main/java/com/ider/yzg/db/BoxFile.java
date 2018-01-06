@@ -3,6 +3,7 @@ package com.ider.yzg.db;
 import org.litepal.crud.DataSupport;
 
 import java.io.File;
+import java.util.List;
 
 /**
  * Created by Eric on 2017/8/29.
@@ -147,6 +148,14 @@ public class BoxFile extends DataSupport {
         return isOpenOp;
     }
 
+    public boolean containsPathOf(List<BoxFile> list){
+        for (BoxFile boxFile:list){
+            if (boxFile.getFilePath().equals(this.filePath)){
+                return true;
+            }
+        }
+        return false;
+    }
     @Override
     public boolean equals(Object object){
         if (object instanceof BoxFile){

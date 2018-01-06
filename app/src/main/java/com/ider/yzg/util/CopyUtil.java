@@ -44,6 +44,27 @@ public class CopyUtil {
     private static boolean isAddCopyBytes;
     private static boolean isUpdateUI;
 
+
+    public static void createDir(List<BoxFile> list, OnCompleteListener listener){
+        CopyUtil.listener = listener;
+        isCanceled = false;
+        isComplete = false;
+        copyingFiles = list;
+        okHttpClient = new OkHttpClient.Builder().connectTimeout(20, TimeUnit.SECONDS).readTimeout(60, TimeUnit.SECONDS).build();
+    }
+    private static void creating(){
+        if (copyingFiles.size()>0){
+            create(copyingFiles.get(0));
+        }else {
+            copyingFiles = null;
+            isComplete = true;
+            okHttpClient =null;
+            listener.complete();
+        }
+    }
+    private static void create(BoxFile boxFile){
+
+    }
     public static void startCopyTvFile(List<BoxFile> list, long totalBytes, OnCompleteListener listener){
         CopyUtil.listener = listener;
         isCanceled = false;

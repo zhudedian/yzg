@@ -220,7 +220,18 @@ public class OperateBar extends LinearLayout {
 
         copy.setSelect(true);
     }
+    public void showCreateMenu(){
+        setVisibility(VISIBLE);
+        allcheck.setVisibility(GONE);
+        copy.setVisibility(GONE);
+        remove.setVisibility(GONE);
+        rename.setVisibility(GONE);
+        move.setVisibility(GONE);
+        trans.setVisibility(GONE);
+        newcreate.setVisibility(VISIBLE);
+        cancel.setVisibility(VISIBLE);
 
+    }
     public void setListener(OnMenuClickListener listener){
         this.listener = listener;
     }

@@ -50,6 +50,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     private int endCount;
     private int currentItem;
+    private long lastTouchBackTime;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -329,7 +330,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     @Override
    public void onBackPressed(){
         if (currentItem!=2&&currentItem!=3||!fragmentInter.fragmentBack()){
-            finish();
+            long backTime = System.currentTimeMillis();
+            if ((backTime-lastTouchBackTime)>2000){
+                lastTouchBackTime = backTime;
+                Toast.makeText(MainActivity.this, "再按一次退出应用！", Toast.LENGTH_SHORT).show();
+            }else {
+                finish();
+            }
         }
     }
 }

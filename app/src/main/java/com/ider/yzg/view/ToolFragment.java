@@ -85,6 +85,10 @@ public class ToolFragment extends Fragment implements FragmentInter {
         screenShot.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                if (!MyData.isConnect){
+                    Toast.makeText(context, context.getString(R.string.disconnect_notice), Toast.LENGTH_SHORT).show();
+                    return;
+                }
                 if (isShoting){
                     return;
                 }
@@ -107,6 +111,10 @@ public class ToolFragment extends Fragment implements FragmentInter {
         clean.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                if (!MyData.isConnect){
+                    Toast.makeText(context, context.getString(R.string.disconnect_notice), Toast.LENGTH_SHORT).show();
+                    return;
+                }
                 String comment = "\"cleanProgress\"";
                 RequestUtil.requestWithComment(comment, new RequestUtil.HandleResult() {
                     @Override
@@ -119,6 +127,10 @@ public class ToolFragment extends Fragment implements FragmentInter {
         reboot.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                if (!MyData.isConnect){
+                    Toast.makeText(context, context.getString(R.string.disconnect_notice), Toast.LENGTH_SHORT).show();
+                    return;
+                }
                 String comment = "\"reboot\"";
                 RequestUtil.requestWithComment(comment, new RequestUtil.HandleResult() {
                     @Override

@@ -17,6 +17,7 @@ import android.view.ViewGroup;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.AdapterView;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.ProgressBar;
@@ -51,6 +52,7 @@ import java.util.concurrent.TimeUnit;
 import okhttp3.OkHttpClient;
 
 import static android.R.attr.factor;
+import static android.R.attr.label;
 import static android.R.attr.type;
 import static android.R.id.list;
 import static android.R.transition.move;
@@ -72,6 +74,7 @@ public class TransportFragment extends Fragment implements View.OnClickListener,
     private OperateBar operateBar;
     private TextView tvbox, mobile;
     private NoticeBar noticeBar;
+    private ImageView moreMenu;
     private LinearLayout pathLinearView;
     private TextView pathTextView;
     private ProgressDialog progressDialog;
@@ -105,6 +108,7 @@ public class TransportFragment extends Fragment implements View.OnClickListener,
         noticeBar = (NoticeBar)view.findViewById(R.id.notice_bar);
         pathLinearView = (LinearLayout)view.findViewById(R.id.path_linear_view);
         pathTextView = (TextView)view.findViewById(R.id.path_text_view);
+        moreMenu = (ImageView)view.findViewById(R.id.more_menu);
         tvbox = (TextView) view.findViewById(R.id.tvbox_button);
         mobile = (TextView) view.findViewById(R.id.mobile_button);
         listView = (ListView) view.findViewById(R.id.list_view);
@@ -283,6 +287,12 @@ public class TransportFragment extends Fragment implements View.OnClickListener,
                     adapter.notifyDataSetChanged();
                 }
                 return true;
+            }
+        });
+        moreMenu.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                operateBar.showCreateMenu();
             }
         });
         operateBar.setListener(new OperateBar.OnMenuClickListener() {
@@ -507,6 +517,8 @@ public class TransportFragment extends Fragment implements View.OnClickListener,
     }
     private void startMove(final String filePath,List<BoxFile> list){
         operateBar.setVisibility(View.GONE);
+        final List<BoxFile> deleteList = new ArrayList<>();
+        deleteList.addAll(list);
         if(page == 1) {
             if (list.size() > 0) {
                 PopupUtil.getMovePopup(context, new ProgressPopup.OnCancelListener() {
@@ -518,7 +530,7 @@ public class TransportFragment extends Fragment implements View.OnClickListener,
                         init();
                     }
                 }).show(listView);
-                FindUtil.findNoDirDownloadBoxFile(list, new FindUtil.FindCompleteListener() {
+                FindUtil.findNoDirCopyTvBoxFile(list, new FindUtil.FindCompleteListener() {
                     @Override
                     public void complete(long totalBytes, final List<BoxFile> list) {
                         if (totalBytes>dirAvaSize){
@@ -538,6 +550,12 @@ public class TransportFragment extends Fragment implements View.OnClickListener,
                                     progressBar.setVisibility(View.VISIBLE);
                                     MyData.disPlayMode = MyData.NORMAL;
                                     operateBar.setVisibility(View.GONE);
+                                    RequestUtil.delete(deleteList, new RequestUtil.HandleResult() {
+                                        @Override
+                                        public void resultHandle(String result) {
+
+                                        }
+                                    });
                                     Handler handler = new Handler();
                                     handler.postDelayed(new Runnable() {
                                         @Override
@@ -556,6 +574,12 @@ public class TransportFragment extends Fragment implements View.OnClickListener,
                                     progressBar.setVisibility(View.VISIBLE);
                                     MyData.disPlayMode = MyData.NORMAL;
                                     operateBar.setVisibility(View.GONE);
+                                    RequestUtil.delete(deleteList, new RequestUtil.HandleResult() {
+                                        @Override
+                                        public void resultHandle(String result) {
+
+                                        }
+                                    });
                                     Handler handler = new Handler();
                                     handler.postDelayed(new Runnable() {
                                         @Override
@@ -572,6 +596,7 @@ public class TransportFragment extends Fragment implements View.OnClickListener,
             }else {
                 MyData.disPlayMode = MyData.NORMAL;
                 initView();
+                init();
             }
         }
     }
@@ -588,7 +613,7 @@ public class TransportFragment extends Fragment implements View.OnClickListener,
                         init();
                     }
                 }).show(listView);
-                FindUtil.findNoDirDownloadBoxFile(list, new FindUtil.FindCompleteListener() {
+                FindUtil.findNoDirCopyTvBoxFile(list, new FindUtil.FindCompleteListener() {
                     @Override
                     public void complete(long totalBytes, List<BoxFile> list) {
                         if (totalBytes>dirAvaSize){
@@ -620,6 +645,7 @@ public class TransportFragment extends Fragment implements View.OnClickListener,
             }else {
                 MyData.disPlayMode = MyData.NORMAL;
                 initView();
+                init();
             }
         }else {
             PopupUtil.getCopyPopup(context, new ProgressPopup.OnCancelListener() {
@@ -635,7 +661,7 @@ public class TransportFragment extends Fragment implements View.OnClickListener,
                     initView();
                 }
             }).show(listView);
-            FindUtil.findNoDirUploadBoxFile(list, new FindUtil.FindCompleteListener() {
+            FindUtil.findNoDirCopyMoBoxFile(list, new FindUtil.FindCompleteListener() {
                 @Override
                 public void complete(long totalBytes, List<BoxFile> list) {
                     CopyUtil.startCopyLocalFile(list, totalBytes, new CopyUtil.OnCompleteListener() {
@@ -688,6 +714,7 @@ public class TransportFragment extends Fragment implements View.OnClickListener,
             MyData.disPlayMode = MyData.NORMAL;
             page = 1;
             initView();
+            init();
         }
     }
     private void startUpload(List<BoxFile> list){
@@ -737,6 +764,7 @@ public class TransportFragment extends Fragment implements View.OnClickListener,
             MyData.disPlayMode = MyData.NORMAL;
             page = 2;
             initView();
+            init();
         }
     }
     private void showOverConfirmPopup(final List<BoxFile> list,final List<BoxFile> overList){
@@ -814,6 +842,7 @@ public class TransportFragment extends Fragment implements View.OnClickListener,
                 imm.hideSoftInputFromWindow(editView.getWindowToken(), 0);
             }
         });
+        editView.setText("");
         EditText editText = editView.getEditTextView();
         editText.setFocusable(true);
         editText.setFocusableInTouchMode(true);
@@ -1161,7 +1190,7 @@ public class TransportFragment extends Fragment implements View.OnClickListener,
             return;
         }
         isHandle = true;
-        if (result.equals("null")) {
+        if (result.equals("null")||result.contains("\"label=\"")) {
             isHandle = false;
             return;
         }
@@ -1171,6 +1200,10 @@ public class TransportFragment extends Fragment implements View.OnClickListener,
             diskPath.clear();
         }
         if (files.length==1){
+            MyData.boxFiles.clear();
+            if (MyData.hideFiles!=null){
+                MyData.hideFiles.clear();
+            }
             mHandler.sendEmptyMessage(0);
             isHandle = false;
             return;
@@ -1209,7 +1242,7 @@ public class TransportFragment extends Fragment implements View.OnClickListener,
                     boxFile = new BoxFile(MyData.boxFilePath,type, fis[0], time, size,MyData.boxFilePath+File.separator+fis[0]);
                 }
                 if (type==1||type==0||MyData.disPlayMode.equals(MyData.NORMAL)) {
-                    if (!MyData.selectBoxFiles.contains(boxFile)||MyData.disPlayMode.equals(MyData.NORMAL)){
+                    if (!boxFile.containsPathOf(MyData.selectBoxFiles)||MyData.disPlayMode.equals(MyData.NORMAL)){
                         if (!MyData.boxFiles.contains(boxFile)) {
                             MyData.boxFiles.add(boxFile);
                         }
@@ -1445,11 +1478,10 @@ public class TransportFragment extends Fragment implements View.OnClickListener,
                 } else {
                     moFiles.clear();
                     MyData.fileSelect = MyData.fileSelect.getParentFile();
-                    pathTextView.setText(MyData.fileSelect.getPath());
                     synchronized (adapter) {
                         FileFind.findFiles(moFiles, fileSelect, mHandler);
                     }
-                    Log.i("findFiles", "moFiles.size()="+moFiles.size());
+//                    Log.i("findFiles", "moFiles.size()="+moFiles.size());
                 }
             }else {
                 MyData.isShowCheck = false;

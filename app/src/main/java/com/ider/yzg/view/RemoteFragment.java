@@ -89,7 +89,7 @@ public class RemoteFragment extends Fragment implements FragmentInter,View.OnTou
         context = getContext();
         imm = (InputMethodManager) context.getSystemService(Context.INPUT_METHOD_SERVICE);
         setListener();
-        push.performClick();
+        clickPush();
     }
     @Override
     public void onResume(){
@@ -184,17 +184,19 @@ public class RemoteFragment extends Fragment implements FragmentInter,View.OnTou
 
     @Override
     public void onClick(View view){
-        if (!MyData.isConnect){
-            Toast.makeText(context, context.getString(R.string.disconnect_notice), Toast.LENGTH_SHORT).show();
-            return;
-        }
-        switch (view.getId()){
+        switch (view.getId()) {
             case R.id.push_button:
                 clickPush();
                 break;
             case R.id.touch_button:
                 clickTouch();
                 break;
+        }
+        if (!MyData.isConnect){
+            Toast.makeText(context, context.getString(R.string.disconnect_notice), Toast.LENGTH_SHORT).show();
+            return;
+        }
+        switch (view.getId()){
             case R.id.center_button:
                 sendMsg("cocenter ,,,,,,");
                 break;

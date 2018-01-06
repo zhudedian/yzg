@@ -54,7 +54,37 @@ public class FindUtil {
         totalBytes = 0;
         addNoDirFile(list);
     }
-
+    public static void findNoDirCopyTvBoxFile(final List<BoxFile> list, FindCompleteListener listener){
+        FindUtil.listener = listener;
+        if (findList==null){
+            findList = new ArrayList<>();
+        }
+        findList.addAll(list);
+        list.clear();
+        totalBytes = 0;
+        addNoDirFile2(list);
+    }
+    public static void findNoDirCopyMoBoxFile(List<BoxFile> list,FindCompleteListener listener){
+        FindUtil.listener = listener;
+        totalBytes = 0;
+        if (findList==null){
+            findList = new ArrayList<>();
+        }
+        findList.addAll(list);
+        list.clear();
+        for (BoxFile boxFile:findList){
+            if (boxFile.getFileType()==1){
+                File file1 = new File(boxFile.getSavePath()+File.separator+boxFile.getFileName());
+                file1.mkdirs();
+                addNoDirFile2(new File(boxFile.getFilePath()),boxFile.getSavePath(),list);
+            }else {
+                totalBytes = totalBytes+FileUtil.getLSize(new File(boxFile.getFilePath()));
+                list.add(boxFile);
+            }
+        }
+        listener.complete(totalBytes,list);
+        findList = null;
+    }
 
     private static void addNoDirFile(final List<BoxFile> list){
         if (findList.size()>0){
@@ -87,6 +117,35 @@ public class FindUtil {
             listener.complete(totalBytes,list);
         }
     }
+    private static void addNoDirFile2(final List<BoxFile> list){
+        if (findList.size()>0){
+            final BoxFile boxFile = findList.get(0);
+            final String savePath = boxFile.getSavePath();
+            final String newFilePath = savePath+File.separator+boxFile.getFileName();
+            if (boxFile.getFileType()==1){
+                RequestUtil.createDir(newFilePath, new RequestUtil.HandleResult() {
+                    @Override
+                    public void resultHandle(String result) {
+                        String comment = changeToUnicode(boxFile.getFilePath());
+                        RequestUtil.requestWithComment(comment, new RequestUtil.HandleResult() {
+                            @Override
+                            public void resultHandle(String result) {
+                                handResult2(newFilePath,result,list);
+                            }
+                        });
+                    }
+                });
+
+            }else {
+                totalBytes = totalBytes+boxFile.getFileSize();
+                list.add(boxFile);
+                findList.remove(0);
+                addNoDirFile2(list);
+            }
+        }else {
+            listener.complete(totalBytes,list);
+        }
+    }
     private static void addNoDirFile(File file, String savePath,List<BoxFile> list){
         if (file.isDirectory()){
             File[] files = file.listFiles();
@@ -97,6 +156,25 @@ public class FindUtil {
             for (File f:files){
                 if (f.isDirectory()){
                     addNoDirFile(f,savePath+File.separator+file.getName(),list);
+                }else {
+                    totalBytes = totalBytes+FileUtil.getLSize(f);
+                    addBoxFile(f,savePath+File.separator+file.getName(),list);
+                }
+            }
+        }
+    }
+    private static void addNoDirFile2(File file, String savePath,List<BoxFile> list){
+        if (file.isDirectory()){
+            File[] files = file.listFiles();
+            if (files==null||files.length==0){
+                addBoxFile(file,savePath,list);
+                return;
+            }
+            for (File f:files){
+                if (f.isDirectory()){
+                    File file1 = new File(savePath+File.separator+file.getName());
+                    file1.mkdirs();
+                    addNoDirFile2(f,savePath+File.separator+file.getName(),list);
                 }else {
                     totalBytes = totalBytes+FileUtil.getLSize(f);
                     addBoxFile(f,savePath+File.separator+file.getName(),list);
@@ -156,6 +234,39 @@ public class FindUtil {
         }
         findList.remove(0);
         addNoDirFile(list);
+
+    }
+    private static void handResult2(String savePath ,String result,List<BoxFile> list) {
+
+        String[] files = result.split("\"type=\"");
+
+        for (int i = 1; i < files.length; i++) {
+            String[] fils = files[i].split("\"name=\"");
+            int type = Integer.parseInt(fils[0]);
+            String[] fis = fils[1].split("\"size=\"");
+            String[] fi = fis[1].split("\"time=\"");
+            long size=0;
+            long time =  Long.parseLong(fi[1]);
+//                Log.i(TAG,fis[0]);
+            BoxFile boxFile;
+            if (type==0){
+                String[] names = fis[0].split("\"path=\"");
+                size = Long.parseLong(fi[0]);
+                boxFile = new BoxFile(type, names[0],time, size, names[1]);
+            }else if (type==1){
+                String[] sizes = fi[0].split("\"count=\"");
+                size = Long.parseLong(sizes[0]);
+                boxFile = new BoxFile(type, fis[0], time, size, files[0] + "/" + fis[0]);
+                boxFile.setFileCount(Integer.parseInt(sizes[1]));
+            }else {
+                size = Long.parseLong(fi[0]);
+                boxFile = new BoxFile(type, fis[0], time, size, files[0] + "/" + fis[0]);
+            }
+            boxFile.setSavePath(savePath);
+            findList.add(boxFile);
+        }
+        findList.remove(0);
+        addNoDirFile2(list);
 
     }
     private static String changeToUnicode(String str) {
