@@ -8,6 +8,8 @@ import android.view.View;
 import com.ider.yzg.R;
 import com.ider.yzg.view.ConfirmPopu;
 
+import java.util.List;
+
 /**
  * Created by Eric on 2017/12/14.
  */
@@ -18,6 +20,7 @@ public class PopupUtil {
     private static ProgressPopup progressPopup;
     private static EditPopup editPopup;
     private static ScreenPicPopup screenPicPopup;
+    private static ConnectPopup connectPopup;
     public static ConfirmPopup buildConfirmPopup(Context context, String titleStr, String noticeStr, String okStr,
                                                String cancelStr, boolean outsideTouchable, ConfirmPopu.OnOkListener listener){
         confirmPopup = new ConfirmPopup(context,titleStr,noticeStr,okStr,cancelStr,outsideTouchable,listener);
@@ -35,6 +38,10 @@ public class PopupUtil {
                 context.getResources().getString(R.string.popup_cancel_button), true,listener);
         confirmPopup.setAllCheckLinearVisible(View.VISIBLE);
         return confirmPopup;
+    }
+    public static ConnectPopup getConnectPopup(Context context, List<String> data, ConnectPopup.OnOkListener listener){
+        connectPopup = new ConnectPopup(context,data,"请选择ip进行连接",false,listener);
+        return connectPopup;
     }
     public static ProgressPopup getUploadPopup(Context context,ProgressPopup.OnCancelListener listener){
         progressPopup = new ProgressPopup(context,context.getString(R.string.popup_upload_title),false,listener);
@@ -131,6 +138,11 @@ public class PopupUtil {
                 screenPicPopup.dismiss();
                 screenPicPopup = null;
             }
+        }else if (connectPopup!=null&&connectPopup.isShowing()){
+            if (connectPopup.isCancelable()){
+                connectPopup.dismiss();
+                connectPopup = null;
+            }
         }
     }
     public static void forceDismissPopup() {
@@ -144,6 +156,13 @@ public class PopupUtil {
         }else if(editPopup!=null&& editPopup.isShowing()){
             editPopup.dismiss();
             editPopup= null;
+
+        }else if (screenPicPopup!=null&&screenPicPopup.isShowing()){
+            screenPicPopup.dismiss();
+            screenPicPopup = null;
+        }else if(connectPopup!=null&& connectPopup.isShowing()){
+            connectPopup.dismiss();
+            connectPopup= null;
 
         }
 

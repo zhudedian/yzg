@@ -20,11 +20,14 @@ import android.widget.Toast;
 
 import com.ider.yzg.db.MyData;
 import com.ider.yzg.net.Connect;
+import com.ider.yzg.popu.ConnectPopup;
+import com.ider.yzg.popu.PopupUtil;
 import com.ider.yzg.util.FragmentInter;
 import com.ider.yzg.util.MyApplication;
 import com.ider.yzg.util.SocketClient;
 import com.ider.yzg.view.AppsFragment;
 import com.ider.yzg.view.BottomMenu;
+import com.ider.yzg.view.ConnectIpView;
 import com.ider.yzg.view.CustomViewPager;
 import com.ider.yzg.view.MyFragmentPagerAdapter;
 import com.ider.yzg.view.RemoteFragment;
@@ -34,10 +37,13 @@ import com.ider.yzg.view.TransportFragment;
 import java.util.ArrayList;
 import java.util.List;
 
+import static com.ider.yzg.net.Connect.setData;
+
 public class MainActivity extends AppCompatActivity implements View.OnClickListener{
 
     private String TAG = "MainActivity";
     private CustomViewPager viewpager;
+    private View rootView;
     private List<Fragment> fragmentList = new ArrayList<>();
 
     private RemoteFragment remoteFragment;
@@ -47,6 +53,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private FragmentInter fragmentInter;
     private LinearLayout bottomLinear;
     private BottomMenu apps,remote,transmitter,tool;
+    private ConnectIpView connectIpView;
 
     private int endCount;
     private int currentItem;
@@ -56,6 +63,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        rootView = findViewById(R.id.activity_main);
         ActionBar actionBar = getSupportActionBar();
         if (actionBar != null) {
             actionBar.hide();
@@ -65,7 +73,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         remote = (BottomMenu)findViewById(R.id.remote);
         transmitter = (BottomMenu)findViewById(R.id.transmitter);
         tool = (BottomMenu)findViewById(R.id.tool);
-
+        connectIpView = (ConnectIpView)findViewById(R.id.connect_ip_view);
         appsFragment = new AppsFragment();
         remoteFragment = new RemoteFragment();
         transportFragment = new TransportFragment();
@@ -207,7 +215,18 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         init();
     }
     public void connecting(){
-        Connect.onBrodacastSend(mHandler);
+        Connect.onBrodacastSend(mHandler, new Connect.CompleteListener() {
+            @Override
+            public void complete(List<String> list) {
+                connectIpView.show("请选择ip进行连接", list, new ConnectIpView.OnOkClickListener() {
+                    @Override
+                    public void click(String ip) {
+                        Connect.setData(ip);
+                        connectIpView.dismiss();
+                    }
+                });
+            }
+        });
     }
     private void init(){
 
@@ -232,7 +251,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                                 if (MyData.client!=null) {
                                     MyData.client.close();
                                     MyData.client = null;
-                                    Connect.onBrodacastSend(mHandler);
+                                    Connect.onBrodacastSend(mHandler, new Connect.CompleteListener() {
+                                        @Override
+                                        public void complete(List<String> list) {
+
+                                        }
+                                    });
                                     init();
                                     Intent intent = new Intent("connect_failed");
                                     sendBroadcast(intent);

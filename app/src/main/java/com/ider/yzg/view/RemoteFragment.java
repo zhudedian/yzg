@@ -122,7 +122,7 @@ public class RemoteFragment extends Fragment implements FragmentInter,View.OnTou
                 public void click(boolean isOk, String editStr) {
                     if (isOk) {
 //                        RequestUtil.sendInfo(editStr);
-                        RequestUtil.closeIME(editStr);
+                        RequestUtil.okayIME(editStr);
                     }else {
                         RequestUtil.closeIME(editTextOriginInfo);
 //                        RequestUtil.sendInfo(editTextOriginInfo);

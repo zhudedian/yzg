@@ -51,7 +51,7 @@ public class EditView extends RelativeLayout {
             @Override
             public void onClick(View v) {
                 if (outsideTouchable){
-                    PopupUtil.dismissPopup();
+                    setVisibility(GONE);
                 }
             }
         });

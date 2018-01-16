@@ -11,6 +11,7 @@ import okhttp3.Call;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 
+import static android.R.attr.editable;
 import static com.ider.yzg.util.SocketClient.mHandler;
 
 /**
@@ -19,7 +20,7 @@ import static com.ider.yzg.util.SocketClient.mHandler;
 
 public class EditChangeListener implements TextWatcher {
 
-
+    private  Handler handler = new Handler();
     private String lastSendInfo = "";
     public EditChangeListener(){
         super();
@@ -47,8 +48,15 @@ public class EditChangeListener implements TextWatcher {
         String info = editable.toString();
         if (!lastSendInfo.equals(info)) {
             lastSendInfo = info;
-            RequestUtil.sendInfo(editable.toString());
+            handler.removeCallbacks(sendInfo);
+            handler.postDelayed(sendInfo,200);
         }
     }
 
+    Runnable sendInfo = new Runnable() {
+        @Override
+        public void run() {
+            RequestUtil.sendInfo(lastSendInfo);
+        }
+    };
 }
