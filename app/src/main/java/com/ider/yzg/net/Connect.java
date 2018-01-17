@@ -1,16 +1,22 @@
 package com.ider.yzg.net;
 
 import android.content.Context;
+import android.os.Bundle;
 import android.os.Handler;
+import android.os.Looper;
+import android.os.Message;
 import android.util.Log;
 import android.view.View;
+import android.widget.Toast;
 
+import com.ider.yzg.MainActivity;
 import com.ider.yzg.db.MyData;
 import com.ider.yzg.popu.ConnectPopup;
 import com.ider.yzg.popu.PopupUtil;
 import com.ider.yzg.util.RequestUtil;
 import com.ider.yzg.view.ConfirmPopu;
 
+import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.InetAddress;
 import java.net.MulticastSocket;
@@ -34,6 +40,7 @@ public class Connect {
     private static boolean isConnecting = false;
     private static boolean isScanComplete;
     private static CompleteListener listener;
+    private static String lastIp = "";
     public static void onBrodacastSend(Handler handler,CompleteListener listener) {
         if (isConnecting){
             return;
@@ -53,7 +60,33 @@ public class Connect {
             new Thread(new Runnable() {
                 @Override
                 public void run() {
-                    connecting();
+                    mHandler.postDelayed(sendInfo,500);
+                    while (!MyData.isConnect&&!isScanComplete) {
+                        // 获取当前时间
+                        //String time = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());
+                        // 当前时间+标识后缀
+                        //time = time + " >>> form server onBrodacastSend()";
+                        String msg = "connect";
+                        // 获取当前时间+标识后缀的字节数组
+                        byte[] buf = msg.getBytes();
+                        // 组报
+                        DatagramPacket datagramPacket = new DatagramPacket(buf, buf.length);
+                        // 向组播ID，即接收group /239.0.0.1  端口 10001
+                        datagramPacket.setAddress(address);
+                        // 发送的端口号
+                        datagramPacket.setPort(10001);
+                        try {
+                            // 开始发送
+                            multicastSocket.send(datagramPacket);
+                            onBrodacastReceiver();
+                            // 每执行一次，线程休眠2s，然后继续下一次任务
+                            Thread.sleep(100);
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                    }
                 }
             }).start();
         } catch (UnknownHostException e) {
@@ -62,27 +95,7 @@ public class Connect {
             e.printStackTrace();
         }
     }
-    private static void connecting(){
-        mHandler.postDelayed(sendInfo,3000);
-        String msg = "connect";
-        // 获取当前时间+标识后缀的字节数组
-        byte[] buf = msg.getBytes();
-        // 组报
-        DatagramPacket datagramPacket = new DatagramPacket(buf, buf.length);
-        // 向组播ID，即接收group /239.0.0.1  端口 10001
-        datagramPacket.setAddress(address);
-        // 发送的端口号
-        datagramPacket.setPort(10001);
-        try {
-            // 开始发送
-            multicastSocket.send(datagramPacket);
-            onBrodacastReceiver();
-            // 每执行一次，线程休眠2s，然后继续下一次任务
 
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
     private static void onBrodacastReceiver() {
         //Log.i("receiver","onBrodacastReceiver");
         new Thread(new Runnable() {
@@ -104,18 +117,22 @@ public class Connect {
                     String ms = new String(message);
                     if (ms.equals("snoop")){
                         mHandler.removeCallbacks(sendInfo);
+                        if (ip.equals(lastIp)){
+                            isScanComplete = true;
+                            setData(ip);
+                            return;
+                        }
                         if (!ipList.contains(ip)){
                             ipList.add(ip);
-                            connecting();
                         }else {
+                            isConnecting = false;
+                            isScanComplete = true;
                             if (ipList.size()==1){
                                 setData(ip);
                             }else {
+
 //                            Log.i("Connect","ip="+ip);
-                            isConnecting = false;
-                            if (listener!= null){
-                                listener.complete(ipList);
-                            }
+                                handler.sendEmptyMessage(0);
 
                             }
                         }
@@ -132,6 +149,8 @@ public class Connect {
         }).start();
     }
     public static void setData(String ip){
+        lastIp = ip;
+        isConnecting = false;
         MyData.isConnect = true;
         String oldIP = MyData.boxIP;
         MyData.boxIP = ip.replace("/","");
@@ -149,7 +168,23 @@ public class Connect {
         @Override
         public void run() {
             isConnecting = false;
+            isScanComplete = true;
             mHandler.sendEmptyMessage(0);
+        }
+    };
+    private static Handler handler = new Handler(Looper.getMainLooper()){
+        @Override
+        public void handleMessage(Message msg){
+            switch (msg.what){
+                case 0:
+                    if (listener!= null){
+                        listener.complete(ipList);
+                    }
+                    break;
+                default:
+                    break;
+            }
+
         }
     };
     public interface CompleteListener{

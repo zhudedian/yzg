@@ -34,6 +34,7 @@ import com.ider.yzg.net.HTTPFileDownloadTask;
 import com.ider.yzg.net.UploadUtil;
 import com.ider.yzg.popu.PopuUtils;
 import com.ider.yzg.popu.PopupDialog;
+import com.ider.yzg.popu.PopupUtil;
 import com.ider.yzg.popu.Popus;
 import com.ider.yzg.util.ApkUtil;
 import com.ider.yzg.util.FileUtil;
@@ -122,19 +123,27 @@ public class AppsFragment extends Fragment implements View.OnClickListener,Fragm
             appsAdapter = new AppsAdapter(context, R.layout.apk_list_item, apps);
             appsAdapter.setOnApkInstallClickListener(new AppsAdapter.OnApkInstallClickListener() {
                 @Override
-                public void installClick(TvApp tvApp) {
+                public void installClick(final TvApp tvApp) {
                     if (MyData.isConnect) {
                         if (tvApp.getType().equals("1")) {
-                            String packageName = tvApp.getPackageName();
-                            Log.i(TAG, tvApp.getPackageName());
-                            final String comment = changeToUnicode("\"uninstall=\"" +packageName);
-                            RequestUtil.requestWithComment(comment, new RequestUtil.HandleResult() {
+//                            String packageName = tvApp.getPackageName();
+//                            Log.i(TAG, tvApp.getPackageName());
+                            PopupUtil.buildConfirmPopup(getContext(), "确认卸载？", tvApp.getLabel(), "卸载", "取消", true, new ConfirmPopu.OnOkListener() {
                                 @Override
-                                public void resultHandle(String result) {
-
+                                public void onOkClick(boolean isOk, boolean isAllCheck) {
+                                    if (isOk){
+                                        final String comment = changeToUnicode("\"uninstall=\"" +tvApp.getPackageName());
+                                        RequestUtil.requestWithComment(comment, new RequestUtil.HandleResult() {
+                                            @Override
+                                            public void resultHandle(String result) {
+                                                Toast.makeText(getContext(),"卸载成功！",Toast.LENGTH_SHORT).show();
+                                                initTvState();
+                                            }
+                                        });
+                                    }
+                                    PopupUtil.forceDismissPopup();
                                 }
-                            });
-                            showUninstallDialog(tvApp);
+                            }).show(listView);
                         }else {
                             Toast.makeText(context,context.getString(R.string.system_app_uninstall_notice),Toast.LENGTH_SHORT).show();
                         }
@@ -217,7 +226,8 @@ public class AppsFragment extends Fragment implements View.OnClickListener,Fragm
     public void onClick(View view){
         switch (view.getId()){
             case R.id.recommend_button:
-                clickRecommend();
+                Toast.makeText(getContext(),"暂未开放该功能！",Toast.LENGTH_SHORT).show();
+//                clickRecommend();
                 break;
             case R.id.local_button:
                 page = 2;
@@ -333,10 +343,37 @@ public class AppsFragment extends Fragment implements View.OnClickListener,Fragm
             adapter = new ApkAdapter(getContext(), R.layout.apk_list_item, localApps);
             adapter.setOnApkInstallClickListener(new ApkAdapter.OnApkInstallClickListener() {
                 @Override
-                public void installClick(ApkFile apkFile) {
+                public void installClick(final ApkFile apkFile) {
                     Log.i(TAG,"apkFile.getFileName()="+apkFile.getFileName());
                     if (MyData.isConnect&&apkFile.getInstallLevel()>1){
-                        showInstallDialog(apkFile);
+                        PopupUtil.buildConfirmPopup(getContext(), "确认安装？", apkFile.getFileName(), "安装", "取消", true, new ConfirmPopu.OnOkListener() {
+                            @Override
+                            public void onOkClick(boolean isOk, boolean isAllCheck) {
+                                if (isOk){
+                                    final String apkPath = apkFile.getFilePath();
+                                    showProgressDialog(apkFile.getFileName());
+                                    new Thread(){
+                                        @Override
+                                        public void run(){
+                                            File file = new File(apkPath);
+                                            if(file!=null)
+                                            {
+                                                int res = UploadUtil.uploadFile( file, MyData.installUrl,"");
+                                                Log.i("tag","request="+res);
+                                                if (res==200){
+                                                    apkFile.setInstallLevel(1);
+                                                    mHandler.sendEmptyMessage(3);
+                                                }else {
+                                                    mHandler.sendEmptyMessage(4);
+                                                }
+
+                                            }
+                                        }
+                                    }.start();
+                                }
+                                PopupUtil.forceDismissPopup();
+                            }
+                        }).show(listView);
                     }
                 }
             });
@@ -467,6 +504,12 @@ public class AppsFragment extends Fragment implements View.OnClickListener,Fragm
         dir.mkdirs();
         BoxFile boxFile = new BoxFile();
         boxFile.setFilePath(path);
+        try {
+            if (MyData.downUrl !=null)
+                mHttpUri = new URI(MyData.downUrl);
+        } catch (URISyntaxException e) {
+            e.printStackTrace();
+        }
         mHttpTask = new HTTPFileDownloadTask(boxFile, mHttpClient, mHttpUri, MyData.picIconSavePath, name, 1);
         mHttpTask.setProgressHandler(mHttpDownloadHandler);
         mHttpTask.start();
@@ -544,68 +587,7 @@ public class AppsFragment extends Fragment implements View.OnClickListener,Fragm
         String unicode = stringBuffer.toString();
         return unicode;
     }
-    private void showInstallDialog(final ApkFile apkFile){
 
-        View view = View.inflate(getContext(), R.layout.confirm_upload, null);
-        Popus popup = new Popus();
-        popup.setvWidth(-1);
-        popup.setvHeight(-1);
-        popup.setClickable(true);
-        popup.setAnimFadeInOut(R.style.PopupWindowAnimation);
-        popup.setCustomView(view);
-        popup.setContentView(R.layout.fragment_apps);
-        PopupDialog popupDialog = PopuUtils.createPopupDialog(getContext(), popup);
-        popupDialog.showAtLocation(listView, Gravity.CENTER, 0, 0);
-        TextView title = (TextView)view.findViewById(R.id.title);
-        LinearLayout allSelect = (LinearLayout)view.findViewById(R.id.all_select);
-        final CheckBox allcheck = (CheckBox)view.findViewById(R.id.all_select_check);
-        TextView fileName = (TextView)view.findViewById(R.id.file_name);
-        Button cancel = (Button)view.findViewById(R.id.cancel_action);
-        Button ok = (Button)view.findViewById(R.id.ok_action);
-        allSelect.setVisibility(View.GONE);
-        title.setText("确认安装");
-        fileName.setText(apkFile.getFileName());
-        cancel.setText("取消");
-        cancel.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                PopuUtils.dismissPopupDialog();
-            }
-        });
-        ok.setText("安装");
-        ok.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                final String apkPath = apkFile.getFilePath();
-                showProgressDialog(apkFile.getFileName());
-                new Thread(){
-                    @Override
-                    public void run(){
-                        File file = new File(apkPath);
-                        if(file!=null)
-                        {
-                            int res = UploadUtil.uploadFile( file, MyData.installUrl,"");
-                            Log.i("tag","request="+res);
-                            if (res==200){
-                                apkFile.setInstallLevel(1);
-                                mHandler.sendEmptyMessage(3);
-                            }else {
-                                mHandler.sendEmptyMessage(4);
-                            }
-
-                        }
-                    }
-                }.start();
-                PopuUtils.dismissPopupDialog();
-            }
-        });
-        allcheck.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-
-            }
-        });
-    }
     private void showProgressDialog(String name){
         progressDialog = new ProgressDialog(getContext());
         progressDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
@@ -615,80 +597,7 @@ public class AppsFragment extends Fragment implements View.OnClickListener,Fragm
         progressDialog.setMessage(name);
         progressDialog.show();
     }
-    private void showUninstallDialog(TvApp app){
 
-        String name = app.getLabel();
-        View view = View.inflate(context, R.layout.confirm_upload, null);
-        Popus popup = new Popus();
-        popup.setvWidth(-1);
-        popup.setvHeight(-1);
-        popup.setClickable(true);
-        popup.setAnimFadeInOut(R.style.PopupWindowAnimation);
-        popup.setCustomView(view);
-        popup.setContentView(R.layout.fragment_apps);
-        PopupDialog popupDialog = PopuUtils.createPopupDialog(context, popup);
-        popupDialog.showAtLocation(listView, Gravity.CENTER, 0, 0);
-        TextView title = (TextView)view.findViewById(R.id.title);
-        LinearLayout allSelect = (LinearLayout)view.findViewById(R.id.all_select);
-        final CheckBox allcheck = (CheckBox)view.findViewById(R.id.all_select_check);
-        TextView fileName = (TextView)view.findViewById(R.id.file_name);
-        Button cancel = (Button)view.findViewById(R.id.cancel_action);
-        Button ok = (Button)view.findViewById(R.id.ok_action);
-        allSelect.setVisibility(View.GONE);
-        title.setText("确认卸载");
-        fileName.setText(name);
-        cancel.setText("取消");
-        cancel.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                new Thread() {
-                    @Override
-                    public void run() {
-                        try {
-                            Request request = new Request.Builder().header("comment","\"uninstall\""+"cancel" )
-                                    .url(MyData.downUrl).build();
-                            Call call = okHttpClient.newCall(request);
-                            Response response = call.execute();
-//                            final String result = response.body().string();
-
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                        }
-                    }
-                }.start();
-                PopuUtils.dismissPopupDialog();
-            }
-        });
-        ok.setText("卸载");
-        ok.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                new Thread() {
-                    @Override
-                    public void run() {
-                        try {
-                            Request request = new Request.Builder().header("comment","\"uninstall\""+"ok" )
-                                    .url(MyData.downUrl).build();
-                            Call call = okHttpClient.newCall(request);
-                            Response response = call.execute();
-//                            final String result = response.body().string();
-
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                        }
-                    }
-                }.start();
-                PopuUtils.dismissPopupDialog();
-
-            }
-        });
-        allcheck.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-
-            }
-        });
-    }
 
     Handler mHandler = new Handler(){
         @Override
