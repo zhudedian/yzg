@@ -102,6 +102,9 @@ public class ItemOpMenu extends LinearLayout {
         this.isSelect = isSelect;
         freshView();
     }
+    public void setText(String str){
+        text.setText(str);
+    }
     public boolean isSelect(){
         return isSelect;
     }

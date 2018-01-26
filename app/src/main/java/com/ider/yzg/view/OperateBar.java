@@ -142,6 +142,7 @@ public class OperateBar extends LinearLayout {
         rename.setSelect(false);
         move.setSelect(false);
         trans.setSelect(false);
+        copy.setText("复制");
     }
 
     public void showOneCheckMenu(boolean page1){
@@ -163,6 +164,7 @@ public class OperateBar extends LinearLayout {
         rename.setSelect(true);
         move.setSelect(true);
         trans.setSelect(true);
+        copy.setText("复制");
     }
     public void showMoreCheckMenu(boolean page1){
         allcheck.setVisibility(VISIBLE);
@@ -182,6 +184,7 @@ public class OperateBar extends LinearLayout {
         remove.setSelect(true);
         move.setSelect(true);
         trans.setSelect(true);
+        copy.setText("复制");
     }
     public void showTransMenu(){
         allcheck.setVisibility(GONE);
@@ -219,6 +222,7 @@ public class OperateBar extends LinearLayout {
         cancel.setVisibility(VISIBLE);
 
         copy.setSelect(true);
+        copy.setText("粘贴");
     }
     public void showCreateMenu(){
         setVisibility(VISIBLE);

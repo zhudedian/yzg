@@ -209,6 +209,7 @@ public class TransportFragment extends Fragment implements View.OnClickListener,
                             BoxFile boxFile = MyData.boxFiles.get(position);
                             if (boxFile.getFileType() == 0){
                                 MyData.boxFilePath = boxFile.getFilePath();
+                                dirAvaSize = boxFile.getCreateTime();
                                 selectDisk = boxFile;
                                 init();
                             }else if (boxFile.getFileType() == 1) {
@@ -493,7 +494,7 @@ public class TransportFragment extends Fragment implements View.OnClickListener,
     }
     private void operateBarOnClick(boolean isAllCheck, boolean isCopy, boolean isRename, boolean isRemove,
                                    boolean isMove, boolean isTrans, boolean isNewCreate, boolean isCancel){
-        if (!MyData.isConnect&&page ==1){
+        if (!MyData.isConnect&&page ==1&&!isAllCheck){
             Toast.makeText(context, context.getString(R.string.disconnect_notice), Toast.LENGTH_SHORT).show();
             return;
         }
