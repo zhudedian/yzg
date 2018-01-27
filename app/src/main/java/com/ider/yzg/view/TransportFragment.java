@@ -1346,7 +1346,8 @@ public class TransportFragment extends Fragment implements View.OnClickListener,
                         listView.setAdapter(boxAdapter);
                         if (MyData.boxFilePath.equals(MyData.root_path)){
                             pathTextView.setText("已挂载设备");
-                        }else {
+                        }else if (selectDisk!=null){
+
                             String filePath = MyData.boxFilePath.replace(selectDisk.getFilePath(), selectDisk.getFileName());
                             pathTextView.setText(filePath);
                         }

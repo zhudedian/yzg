@@ -157,11 +157,11 @@ public class Connect {
         if (!MyData.boxIP.equals(oldIP)){
             MyData.client=null;
         }
-        MyData.infoUrl="http:/"+ip+":8080/info";
-        MyData.downUrl="http:/"+ip+":8080/down";
-        MyData.uploadUrl="http:/"+ip+":8080/upload";
-        MyData.installUrl="http:/"+ip+":8080/install";
-        MyData.appIconUrl="http:/"+ip+":8080/appicon";
+        MyData.infoUrl="http:/"+ip+":8083/info";
+        MyData.downUrl="http:/"+ip+":8083/down";
+        MyData.uploadUrl="http:/"+ip+":8083/upload";
+        MyData.installUrl="http:/"+ip+":8083/install";
+        MyData.appIconUrl="http:/"+ip+":8083/appicon";
         mHandler.sendEmptyMessage(0);
     }
     private static Runnable sendInfo = new Runnable() {
