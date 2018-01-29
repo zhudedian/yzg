@@ -46,7 +46,6 @@ public class RequestUtil {
                             message.setData(data);
                             RequestUtil.handleResult = handleResult;
                             mHandler.sendMessage(message);
-                            MyData.isRequesting = false;
                             break;
                         }
                         sleep(100);
@@ -162,9 +161,11 @@ public class RequestUtil {
                         return;
                     }
                     handleResult.resultHandle(data.getString("result"));
+                    MyData.isRequesting = false;
                     break;
                 case 1:
                     handleResult.resultHandle("exception");
+                    MyData.isRequesting = false;
                     break;
             }
         }

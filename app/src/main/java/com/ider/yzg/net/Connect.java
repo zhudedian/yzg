@@ -39,6 +39,7 @@ public class Connect {
     private static List<String> ipList = new ArrayList<>();
     private static boolean isConnecting = false;
     private static boolean isScanComplete;
+    private static int readCount = 0;
     private static CompleteListener listener;
     private static String lastIp = "";
     public static void onBrodacastSend(Handler handler,CompleteListener listener) {
@@ -51,6 +52,7 @@ public class Connect {
         isConnecting = true;
         mHandler = handler;
         connectCount = 0;
+        readCount = 0;
         MyData.isConnect = false;
         try {
             // 侦听的端口
@@ -60,7 +62,7 @@ public class Connect {
             new Thread(new Runnable() {
                 @Override
                 public void run() {
-                    mHandler.postDelayed(sendInfo,500);
+                    mHandler.postDelayed(sendInfo,1000);
                     while (!MyData.isConnect&&!isScanComplete) {
                         // 获取当前时间
                         //String time = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());
@@ -80,7 +82,7 @@ public class Connect {
                             multicastSocket.send(datagramPacket);
                             onBrodacastReceiver();
                             // 每执行一次，线程休眠2s，然后继续下一次任务
-                            Thread.sleep(100);
+                            Thread.sleep(200);
                         } catch (InterruptedException e) {
                             e.printStackTrace();
                         } catch (IOException e) {
@@ -125,15 +127,18 @@ public class Connect {
                         if (!ipList.contains(ip)){
                             ipList.add(ip);
                         }else {
-                            isConnecting = false;
-                            isScanComplete = true;
-                            if (ipList.size()==1){
-                                setData(ip);
-                            }else {
+                            readCount++;
+                            if (readCount>=5) {
+                                isConnecting = false;
+                                isScanComplete = true;
+                                if (ipList.size() == 1) {
+                                    setData(ip);
+                                } else {
 
 //                            Log.i("Connect","ip="+ip);
-                                handler.sendEmptyMessage(0);
+                                    handler.sendEmptyMessage(0);
 
+                                }
                             }
                         }
 
