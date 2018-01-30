@@ -478,8 +478,8 @@ public class TransportFragment extends Fragment implements View.OnClickListener,
                     }
 
                 }else {
-                    String info = getString(R.string.def_path_info);
-                    handResult(info);
+//                    String info = getString(R.string.def_path_info);
+//                    handResult(info);
                 }
 
             }

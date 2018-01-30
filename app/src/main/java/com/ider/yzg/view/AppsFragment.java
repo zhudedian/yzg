@@ -310,8 +310,8 @@ public class AppsFragment extends Fragment implements View.OnClickListener,Fragm
                     mHandler.sendEmptyMessage(0);
                 }
             }else {
-                String info = getString(R.string.def_tvapp_info);
-                handResult(info);
+//                String info = getString(R.string.def_tvapp_info);
+//                handResult(info);
             }
         }
     }
